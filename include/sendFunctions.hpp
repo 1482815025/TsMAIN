@@ -54,6 +54,27 @@ static uint8_t crc_table[256] =
 0x97, 0x8A, 0xAD, 0xB0, 0xE3, 0xFE, 0xD9, 0xC4
 };
 
+class SendFunc : public Observer {
+public:
+    SendFunc() {
+        this->db = nullptr;
+        realTimeSignals = {};
+    }
+    void setDB(dbParser* db) { this->db = db; }
+    void update(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) override;
+    std::map<unsigned long, std::map<std::string, double>> getReadTimeSignals() {return realTimeSignals;}
+    void printRealTimeSignals() {
+        for (auto& m : realTimeSignals) {
+            std::cout << "\nMessage id: 0x" << std::hex << m.first << std::dec << std::endl;
+            for (auto& s : m.second) {
+                std::cout << "\t" << s.first << ": " << s.second << std::endl;
+            }
+        }
+    }
+private:
+    dbParser* db;
+    std::map<unsigned long, std::map<std::string, double>> realTimeSignals;
+};
 
 /**
  * @brief Generates a CRC checksum for the given data.
@@ -105,7 +126,7 @@ SENDFUNCTION_API void SendCANFDEncodedPayloadsThread(std::shared_ptr<CANFD> canf
  * @param lin The LIN object for communication.
  * @param payloads The Payloads object containing the payloads to be sent.
  */
-SENDFUNCTION_API void SetSlaveAndCreateRxThread(LIN& lin, Payloads_LIN& payloads);
+SENDFUNCTION_API void SetSlaveAndCreateRxThread(std::shared_ptr<LIN> lin, Payloads_LIN& payloads);
 
 /**
  * Updates the slave with the specified LIN ID by setting the value of the given signal.
@@ -116,7 +137,7 @@ SENDFUNCTION_API void SetSlaveAndCreateRxThread(LIN& lin, Payloads_LIN& payloads
  * @param signalName The name of the signal to be updated.
  * @param value The new value to be set for the signal.
  */
-SENDFUNCTION_API void UpdateSlave(LIN& lin, LdfParser& ldfFile, unsigned int linid, std::string signalName, double value);
+SENDFUNCTION_API void UpdateSlave(std::shared_ptr<LIN> lin, LdfParser& ldfFile, unsigned int linid, std::string signalName, double value);
 
 /**
  * Sends a master request by schedule table ID.
@@ -125,7 +146,7 @@ SENDFUNCTION_API void UpdateSlave(LIN& lin, LdfParser& ldfFile, unsigned int lin
  * @param ldfFile The LDF file object.
  * @param scheduleTableId The ID of the schedule table.
  */
-SENDFUNCTION_API void SendMasterRequestByIdThread(LIN& lin, LdfParser& ldfFile, unsigned int scheduleTableId);
+SENDFUNCTION_API void SendMasterRequestByIdThread(std::shared_ptr<LIN> lin, LdfParser& ldfFile, unsigned int scheduleTableId);
 
 /**
  * Sends LIN master requests by name.
@@ -138,29 +159,16 @@ SENDFUNCTION_API void SendMasterRequestByIdThread(LIN& lin, LdfParser& ldfFile, 
  * @param ldfFile The LdfParser object containing the parsed LIN description file.
  * @param tableName The name of the schedule table to send requests from.
  */
-SENDFUNCTION_API void SendMasterRequestByNameThread(LIN& lin, LdfParser& ldfFile, std::string tableName);
+SENDFUNCTION_API void SendMasterRequestByNameThread(std::shared_ptr<LIN> lin, LdfParser& ldfFile, std::string tableName);
 
 // CinInputThread template functions
 template<typename BUS_TYPE>
-SENDFUNCTION_API void CinInputThread(BUS_TYPE bus, DbcParser& dbcFile, Payloads_CAN& encodedPayloads);
+SENDFUNCTION_API void CinInputThreadCAN(BUS_TYPE bus, DbcParser& dbcFile, Payloads_CAN& encodedPayloads, SendFunc* sendFuncCAN);
 
-SENDFUNCTION_API void CinInputThread(LIN& lin, LdfParser& ldfFile);
+SENDFUNCTION_API void CinInputThreadLIN(std::shared_ptr<LIN> lin, LdfParser& ldfFile, SendFunc* sendFuncLIN);
 
 template<typename BUS_TYPE>
-SENDFUNCTION_API void CinInputThreadBoth(BUS_TYPE bus, DbcParser& dbcFile, std::shared_ptr<LIN> lin, LdfParser& ldfFile, Payloads_CAN& encodedPayloads);
-
-
-class SendFunc : public Observer {
-public:
-    SendFunc() {
-        this->db = nullptr;
-        realTimeSignals = {};
-    }
-    void setDB(dbParser* db) { this->db = db; }
-    void update(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) override;
-private:
-    dbParser* db;
-    std::map<unsigned long, std::map<std::string, double>> realTimeSignals;
-};
+SENDFUNCTION_API void CinInputThreadBoth(BUS_TYPE bus, DbcParser& dbcFile, std::shared_ptr<LIN> lin, LdfParser& ldfFile,
+ Payloads_CAN& encodedPayloads, SendFunc* sendFuncCAN, SendFunc* sendFuncLIN);
 
 #endif // SENDFUNCTIONS_HPP

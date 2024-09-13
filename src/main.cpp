@@ -70,7 +70,7 @@ int main() {
 			ldfFile.payloadsGenerator(test_config.ldf_node, encodedPayloadsLIN);
 			lin = std::make_shared<LIN>(linSpeed, XL_LIN_VERSION_2_1, MASTER);
 			lin->attach(monitorLIN);
-			SetSlaveAndCreateRxThread(*lin, encodedPayloadsLIN);
+			SetSlaveAndCreateRxThread(lin, encodedPayloadsLIN);
 			if (!test_config.lin_signals.empty()) {
 				unsigned char updatePayload[100];
 				for (auto& signal : test_config.lin_signals) {
@@ -80,16 +80,16 @@ int main() {
 				}
 			}
 			if (test_config.routinTableId >= 0)
-				sendThreadLIN = std::thread(SendMasterRequestByIdThread, std::ref(*lin), std::ref(ldfFile), test_config.routinTableId);
+				sendThreadLIN = std::thread(SendMasterRequestByIdThread, lin, std::ref(ldfFile), test_config.routinTableId);
 			else {
-				sendThreadLIN = std::thread(SendMasterRequestByIdThread, std::ref(*lin), std::ref(ldfFile), 1);
+				sendThreadLIN = std::thread(SendMasterRequestByIdThread, lin, std::ref(ldfFile), 1);
 			}
 		}
 		else if (!test_config.lin_master) {
 			ldfFile.payloadsGenerator(test_config.ldf_node, encodedPayloadsLIN);
 			lin = std::make_shared<LIN>(linSpeed, XL_LIN_VERSION_2_1, SLAVE);
 			lin->attach(monitorLIN);
-			SetSlaveAndCreateRxThread(*lin, encodedPayloadsLIN);
+			SetSlaveAndCreateRxThread(lin, encodedPayloadsLIN);
 			if (!test_config.lin_signals.empty()) {
 				unsigned char updatePayload[100];
 				for (auto& signal : test_config.lin_signals) {
@@ -107,17 +107,20 @@ int main() {
 	
 	if (!test_config.dbc_file.empty() && !test_config.ldf_file.empty()) {
 		if (dbcFile.databaseBusType == BusType::CAN_FD) {
-			inputThread = std::thread(CinInputThreadBoth<std::shared_ptr<CANFD>>, canfd, std::ref(dbcFile), lin, std::ref(ldfFile), std::ref(encodedPayloadsCAN));
+			inputThread = std::thread(CinInputThreadBoth<std::shared_ptr<CANFD>>, canfd, std::ref(dbcFile), lin, std::ref(ldfFile), std::ref(encodedPayloadsCAN), monitorCAN, monitorLIN);
 		}
 		else {
-			inputThread = std::thread(CinInputThreadBoth<std::shared_ptr<CAN>>, can, std::ref(dbcFile), lin, std::ref(ldfFile), std::ref(encodedPayloadsCAN));
+			inputThread = std::thread(CinInputThreadBoth<std::shared_ptr<CAN>>, can, std::ref(dbcFile), lin, std::ref(ldfFile), std::ref(encodedPayloadsCAN), monitorCAN, monitorLIN);
 		}
 	}
 	else if (!test_config.dbc_file.empty() && test_config.ldf_file.empty() && dbcFile.databaseBusType == BusType::CAN_FD) {
-		inputThread = std::thread(CinInputThread<std::shared_ptr<CANFD>>, canfd, std::ref(dbcFile), std::ref(encodedPayloadsCAN));
+		inputThread = std::thread(CinInputThreadCAN<std::shared_ptr<CANFD>>, canfd, std::ref(dbcFile), std::ref(encodedPayloadsCAN), monitorCAN);
 	}
 	else if (!test_config.dbc_file.empty() && test_config.ldf_file.empty() && dbcFile.databaseBusType == BusType::CAN) {
-		inputThread = std::thread(CinInputThread<std::shared_ptr<CAN>>, can, std::ref(dbcFile), std::ref(encodedPayloadsCAN));
+		inputThread = std::thread(CinInputThreadCAN<std::shared_ptr<CAN>>, can, std::ref(dbcFile), std::ref(encodedPayloadsCAN), monitorCAN);
+	}
+	else if (test_config.dbc_file.empty() && !test_config.ldf_file.empty()) {
+		inputThread = std::thread(CinInputThreadLIN, lin, std::ref(ldfFile), monitorLIN);
 	}
 	else {
 		std::cout << "Invalid configuration." << std::endl;
