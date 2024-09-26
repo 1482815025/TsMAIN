@@ -2,7 +2,8 @@
 //  dbc_parser_helper.hpp
 //  CAN_Payload_Encode_Decode_Tool
 //
-//  Created by Yifan Wang on 7/19/23.
+//  Created on: 04/28/2023
+//      Author: Hao Zheng, Yifan Wang
 //
 
 #ifndef dbc_parser_helper_h

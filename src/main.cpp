@@ -1,7 +1,7 @@
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <thread>
+// #include <iostream>
+// #include <sstream>
+// #include <stdexcept>
+// #include <thread>
 #include <windows.h>
 #include "sendFunctions.hpp"
 #include "readConfig.hpp"
@@ -39,7 +39,7 @@ int main() {
 					}
 				}
 			}
-			canfd = std::make_shared<CANFD>(500000, 2000000);
+			canfd = std::make_shared<CANFD>(dbcFile.Baudrate, dbcFile.BaudRateCANFD);
 			canfd->attach(monitorCAN);
 			sendThreadCAN = std::thread(SendCANFDEncodedPayloadsThread, canfd, std::ref(encodedPayloadsCAN));
 		}
@@ -52,7 +52,7 @@ int main() {
 					}
 				}
 			}
-			can = std::make_shared<CAN>(500000);
+			can = std::make_shared<CAN>(dbcFile.Baudrate);
 			can->attach(monitorCAN);
 			sendThreadCAN = std::thread(SendCANEncodedPayloadsThread, can, std::ref(encodedPayloadsCAN));
 		}

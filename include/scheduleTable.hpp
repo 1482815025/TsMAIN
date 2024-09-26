@@ -1,3 +1,10 @@
+/*
+ *  scheduleTable.hpp
+ *
+ *  Created on: 07/28/2024
+ *      Author: Hao Zheng
+ */
+
 #ifndef scheduleTable_hpp
 #define scheduleTable_hpp
 

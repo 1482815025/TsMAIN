@@ -5,7 +5,7 @@
 | Description : LIN interface and automation related testing platform for vector hardware
 |-----------------------------------------------------------------------------
 | Version     : 1.0
-| Author      : Zheng, Hao
+| Author      : Hao Zheng, Mingbo Li
 | Date        : 2024/7/22
 |---------------------------------------------------------------------------*/
 

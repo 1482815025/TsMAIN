@@ -2,7 +2,8 @@
 //  signal_encoding_type.hpp
 //  LIN_Database_Encode_Decode_Tool
 //
-//  Created by Yifan Wang on 6/14/23.
+//  Created on: 06/13/2023
+//      Author: Hao Zheng, Yifan Wang
 //
 
 #ifndef signal_encoding_type_hpp

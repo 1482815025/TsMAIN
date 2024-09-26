@@ -2,7 +2,8 @@
 //  signal.hpp
 //  LIN_Database_Encode_Decode_Tool
 //
-//  Created by Yifan Wang on 6/14/23.
+//  Created on: 06/14/2023
+//      Author: Hao Zheng, Yifan Wang
 //
 
 #ifndef SIGNAL_LIN_H

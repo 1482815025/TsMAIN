@@ -5,7 +5,7 @@
 | Description : General father class for all bus
 |-----------------------------------------------------------------------------
 | Version     : 1.0
-| Author      : Zheng, Hao
+| Author      : Hao Zheng
 | Date        : 2024/7/22
 |---------------------------------------------------------------------------*/
 
@@ -14,6 +14,8 @@
 
 #include <windows.h>
 #include <iostream>
+#include <string>
+#include <iomanip>
 #include <stdio.h>
 #include <thread>
 #include <vector>

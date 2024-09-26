@@ -1,3 +1,15 @@
+/*----------------------------------------------------------------------------
+| File        : observer.hpp
+| Project     : TsAPI
+|
+| Description : Observer mode support for all bus
+|-----------------------------------------------------------------------------
+| Version     : 1.0
+| Author      : Hao Zheng
+| Date        : 2024/9/10
+|---------------------------------------------------------------------------*/
+
+
 #ifndef OBSERVER_HPP
 #define OBSERVER_HPP
 

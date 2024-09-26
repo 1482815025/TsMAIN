@@ -2,7 +2,7 @@
  *  message.hpp
  *
  *  Created on: 04/28/2023
- *      Author: Yifan Wang
+ *      Author: Hao Zheng, Yifan Wang
  */
 
 #ifndef MESSAGE_H

@@ -13,6 +13,5 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 add_executable(test main.cpp)
 # target_link_libraries(test PRIVATE SendFunc db_parser TsAPI vxlapi64 fltk fltk_gl comctl32 wsock32 gdiplus)
 target_link_libraries(test PRIVATE SendFunc db_parser TsAPI vxlapi64)
+# so that the compiler knows those functions are implemented in the .a file
 target_compile_definitions(test PUBLIC PARSER_STATIC TS_STATIC SEND_FUNCTION_STATIC)
-# 解决报错缺少xxxx.dll
-# set(CMAKE_CXX_FLAGS "-static")

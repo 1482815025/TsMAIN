@@ -2,7 +2,7 @@
  *  dbc_parser.hpp
  *
  *  Created on: 04/28/2023
- *      Author: Yifan Wang
+ *      Author: Hao Zheng, Yifan Wang
  */
 
 #ifndef DBCPARSER_HPP
@@ -64,6 +64,9 @@ public:
         messagesInfo.reserve(1000);
         NodeSignals.reserve(1000);
     }
+
+    unsigned int Baudrate = 0;
+    unsigned int BaudRateCANFD = 0;
 
     // Construct using either a File or a Stream of a DBC-File
     // A bool is used to indicate whether parsing succeeds or not

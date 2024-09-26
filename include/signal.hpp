@@ -2,7 +2,7 @@
  *  signal.hpp
  *
  *  Created on: 04/27/2023
- *      Author: Yifan Wang
+ *      Author: Hao Zheng, Yifan Wang
  */
 
 #ifndef SIGNAL_H
