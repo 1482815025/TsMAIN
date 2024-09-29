@@ -145,72 +145,72 @@ std::shared_ptr<CAN> can;
 Config test_config;
 
 int main() {
-    if (!readIniValue(test_config)) {
-        std::cerr << "Error reading config.ini file." << std::endl;
-        return 1;
-    }
+  if (!readIniValue(test_config)) {
+    std::cerr << "Error reading config.ini file." << std::endl;
+    return 1;
+  }
 
-	if (!test_config.dbc_file.empty()) {
-        // parse the dbcfile
-		dbcFile.parse(test_config.dbc_file);
-		monitorCAN->setDB(&dbcFile);
-		if (dbcFile.databaseBusType == BusType::CAN_FD) {
-			if (!test_config.dbc_node.empty()) {
-                // generate Node signals default value
-				dbcFile.NodeMsgGenerator(test_config.dbc_node, encodedPayloadsCAN);
-				if (!test_config.can_signals.empty()) {
-                    // apply overwrite signal values in config.ini
-					for (auto& signal : test_config.can_signals) {
-						dbcFile.updateSignalValue(std::get<0>(signal), std::get<1>(signal), std::get<2>(signal), encodedPayloadsCAN);
-					}
-				}
-			}
-            // initialize hardware, go on bus
-			canfd = std::make_shared<CANFD>(dbcFile.Baudrate, dbcFile.BaudRateCANFD);
-            // enable real time decode
-			canfd->attach(monitorCAN);
-            // start Node simulation
-			sendThreadCAN = std::thread(SendCANFDEncodedPayloadsThread, canfd, std::ref(encodedPayloadsCAN));
-		}
-		else if (dbcFile.databaseBusType == BusType::CAN) {
-			if (!test_config.dbc_node.empty()) {
-				dbcFile.NodeMsgGenerator(test_config.dbc_node, encodedPayloadsCAN);
-				if (!test_config.can_signals.empty()) {
-					for (auto& signal : test_config.can_signals) {
-						dbcFile.updateSignalValue(std::get<0>(signal), std::get<1>(signal), std::get<2>(signal), encodedPayloadsCAN);
-					}
-				}
-			}
-			can = std::make_shared<CAN>(dbcFile.Baudrate);
-			can->attach(monitorCAN);
-			sendThreadCAN = std::thread(SendCANEncodedPayloadsThread, can, std::ref(encodedPayloadsCAN));
-		}
-		else {
-			std::cout << "Invalid bus type." << std::endl;
-			return 1;
-		}
-	}
+  if (!test_config.dbc_file.empty()) {
+    // parse the dbcfile
+    dbcFile.parse(test_config.dbc_file);
+    monitorCAN->setDB(&dbcFile);
+    if (dbcFile.databaseBusType == BusType::CAN_FD) {
+      if (!test_config.dbc_node.empty()) {
+        // generate Node signals default value
+        dbcFile.NodeMsgGenerator(test_config.dbc_node, encodedPayloadsCAN);
+        if (!test_config.can_signals.empty()) {
+          // apply overwrite signal values in config.ini
+          for (auto& signal : test_config.can_signals) {
+            dbcFile.updateSignalValue(std::get<0>(signal), std::get<1>(signal), std::get<2>(signal), encodedPayloadsCAN);
+          }
+        }
+      }
+      // initialize hardware, go on bus
+      canfd = std::make_shared<CANFD>(dbcFile.Baudrate, dbcFile.BaudRateCANFD);
+      // enable real time decode
+      canfd->attach(monitorCAN);
+      // start Node simulation
+      sendThreadCAN = std::thread(SendCANFDEncodedPayloadsThread, canfd, std::ref(encodedPayloadsCAN));
+    }
+    else if (dbcFile.databaseBusType == BusType::CAN) {
+      if (!test_config.dbc_node.empty()) {
+        dbcFile.NodeMsgGenerator(test_config.dbc_node, encodedPayloadsCAN);
+        if (!test_config.can_signals.empty()) {
+          for (auto& signal : test_config.can_signals) {
+            dbcFile.updateSignalValue(std::get<0>(signal), std::get<1>(signal), std::get<2>(signal), encodedPayloadsCAN);
+          }
+        }
+      }
+      can = std::make_shared<CAN>(dbcFile.Baudrate);
+      can->attach(monitorCAN);
+      sendThreadCAN = std::thread(SendCANEncodedPayloadsThread, can, std::ref(encodedPayloadsCAN));
+    }
     else {
-        std::cout << "No dbc file provided!" << std::endl;
-        return 1;
+      std::cout << "Invalid bus type." << std::endl;
+      return 1;
     }
+  }
+  else {
+    std::cout << "No dbc file provided!" << std::endl;
+    return 1;
+  }
 
-    // enable cmd interactive function
-    if (!test_config.dbc_file.empty() && test_config.ldf_file.empty() && dbcFile.databaseBusType == BusType::CAN_FD) {
-		inputThread = std::thread(CinInputThreadCAN<std::shared_ptr<CANFD>>, canfd, std::ref(dbcFile), std::ref(encodedPayloadsCAN), monitorCAN);
-	}
-    else if (!test_config.dbc_file.empty() && test_config.ldf_file.empty() && dbcFile.databaseBusType == BusType::CAN) {
-		inputThread = std::thread(CinInputThreadCAN<std::shared_ptr<CAN>>, can, std::ref(dbcFile), std::ref(encodedPayloadsCAN), monitorCAN);
-	}
+  // enable cmd interactive function
+  if (!test_config.dbc_file.empty() && test_config.ldf_file.empty() && dbcFile.databaseBusType == BusType::CAN_FD) {
+    inputThread = std::thread(CinInputThreadCAN<std::shared_ptr<CANFD>>, canfd, std::ref(dbcFile), std::ref(encodedPayloadsCAN), monitorCAN);
+  }
+  else if (!test_config.dbc_file.empty() && test_config.ldf_file.empty() && dbcFile.databaseBusType == BusType::CAN) {
+    inputThread = std::thread(CinInputThreadCAN<std::shared_ptr<CAN>>, can, std::ref(dbcFile), std::ref(encodedPayloadsCAN), monitorCAN);
+  }
 
-	if (sendThreadCAN.joinable()) {
-		sendThreadCAN.join();
-	}
-	if (inputThread.joinable()) {
-		inputThread.join();
-	}
-	system("pause");
-	return 0;
+  if (sendThreadCAN.joinable()) {
+    sendThreadCAN.join();
+  }
+  if (inputThread.joinable()) {
+    inputThread.join();
+  }
+  system("pause");
+  return 0;
 }
 ```
 

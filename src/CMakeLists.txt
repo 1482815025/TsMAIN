@@ -1,8 +1,12 @@
 include(CTest)
 enable_testing()
 set(CMAKE_CXX_STANDARD 17)
-add_compile_options(-static)
 aux_source_directory (. SRC_LIST)
+
+# 静态编译
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -static")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+add_compile_options(-static)
 
 include_directories (../include )
 link_directories(../lib/static)
