@@ -77,7 +77,7 @@
 
 <!-- [![Product Name Screen Shot][product-screenshot]](https://example.com) -->
 
-A C/C++ program that can simulate CAN/CANFD/LIN signals and send those messages on real bus. Mainly these are two lib needed, one is [db_Parser](https://github.com/1482815025/db_Parser), which can parse dbc/ldf files and provide decode and encode functions. The other one is [TsAPI](https://github.com/1482815025/TsAPI), which can send real time messages using Vector's hardware interfaces. Besides, there is another lib using to combine TsAPI and db_Parser, and implement real time Cntr & Chks of sending messages together with some real time message display & signals input functions etc. 
+A C/C++ program that can simulate CAN/CANFD/LIN signals and send those messages on real bus. Mainly there are two libs needed, one is [db_Parser](https://github.com/1482815025/db_Parser), which can parse dbc/ldf files and provide decode and encode functions. The other one is [TsAPI](https://github.com/1482815025/TsAPI), which can send real time messages using Vector's hardware interfaces. Besides, there is another lib using to combine TsAPI and db_Parser, and implement real time Cntr & Chks of sending messages together with some real time message display & signals input functions etc. 
 
 Functions available:
 * Parse the database file(dbc & ldf files), simulate ECU node.
