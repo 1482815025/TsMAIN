@@ -70,7 +70,7 @@ public:
     }
     void setDB(dbParser* db) { this->db = db; }
     void update(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) override;
-    std::map<unsigned long, std::map<std::string, double>> getReadTimeSignals() {return realTimeSignals;}
+    std::map<unsigned long, std::map<std::string, double>> getRealTimeSignals() {return realTimeSignals;}
     void printRealTimeSignals() {
         for (auto& m : realTimeSignals) {
             std::cout << "\nMessage id: 0x" << std::hex << m.first << std::dec << std::endl;

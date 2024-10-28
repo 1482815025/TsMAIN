@@ -20,6 +20,7 @@ std::shared_ptr<CANFD> canfd;
 std::shared_ptr<CAN> can;
 std::shared_ptr<LIN> lin;
 Config test_config;
+bool TsMAINLogFlag = true;
 
 int main() {
     if (!readIniValue(test_config)) {
@@ -39,7 +40,7 @@ int main() {
 					}
 				}
 			}
-			canfd = std::make_shared<CANFD>(dbcFile.Baudrate, dbcFile.BaudRateCANFD);
+			canfd = std::make_shared<CANFD>(dbcFile.Baudrate, dbcFile.BaudRateCANFD, TsMAINLogFlag);
 			canfd->attach(monitorCAN);
 			sendThreadCAN = std::thread(SendCANFDEncodedPayloadsThread, canfd, std::ref(encodedPayloadsCAN));
 		}
@@ -52,7 +53,7 @@ int main() {
 					}
 				}
 			}
-			can = std::make_shared<CAN>(dbcFile.Baudrate);
+			can = std::make_shared<CAN>(dbcFile.Baudrate, TsMAINLogFlag);
 			can->attach(monitorCAN);
 			sendThreadCAN = std::thread(SendCANEncodedPayloadsThread, can, std::ref(encodedPayloadsCAN));
 		}
@@ -68,7 +69,7 @@ int main() {
 		unsigned int linSpeed = ldfFile.getLinSpeed()*1000;
 		if (test_config.lin_master && !test_config.ldf_node.empty()) {
 			ldfFile.payloadsGenerator(test_config.ldf_node, encodedPayloadsLIN);
-			lin = std::make_shared<LIN>(linSpeed, XL_LIN_VERSION_2_1, MASTER);
+			lin = std::make_shared<LIN>(linSpeed, XL_LIN_VERSION_2_1, MASTER, TsMAINLogFlag);
 			lin->attach(monitorLIN);
 			SetSlaveAndCreateRxThread(lin, encodedPayloadsLIN);
 			if (!test_config.lin_signals.empty()) {
@@ -87,7 +88,7 @@ int main() {
 		}
 		else if (!test_config.lin_master) {
 			ldfFile.payloadsGenerator(test_config.ldf_node, encodedPayloadsLIN);
-			lin = std::make_shared<LIN>(linSpeed, XL_LIN_VERSION_2_1, SLAVE);
+			lin = std::make_shared<LIN>(linSpeed, XL_LIN_VERSION_2_1, SLAVE, TsMAINLogFlag);
 			lin->attach(monitorLIN);
 			SetSlaveAndCreateRxThread(lin, encodedPayloadsLIN);
 			if (!test_config.lin_signals.empty()) {

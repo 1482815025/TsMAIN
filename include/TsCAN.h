@@ -12,7 +12,7 @@
 #ifndef TSCAN_H
 #define TSCAN_H
 
-#include <sstream>
+// #include <sstream>
 #include "Bus.h"
 
 #define RECEIVE_EVENT_SIZE         1        // DO NOT EDIT! Currently 1 is supported only
@@ -39,52 +39,61 @@ typedef struct {
 class TS_API CAN : public IBus
 {
 public:
-    CAN(unsigned long baudrate = 500000) {
-        m_xlbaudrate = baudrate;
-        m_xlChannelMask = 0;
-        m_xlChannelIndex = -1;
-        rxPayloads = {};
-        m_xlDrvConfig = {};
+    /**
+     * \brief Constructor of CAN.
+     * 
+     * \param baudrate This value specifies the real bit rate.
+     * \param flag Flag of whether the measurement should be logged.
+     */
+    CAN(unsigned long baudrate = 500000, bool flag = false)
+    : IBus(flag),
+    m_xlbaudrate(baudrate),
+    m_xlChannelMask(0),
+    m_xlChannelIndex(-1),
+    m_xlPortHandle(-1),
+    rxPayloads(),
+    m_xlDrvConfig()
+    {
         CANInit();
         CANGoOnBus();
     };
     
     ~CAN();
-    XLstatus CANInit();
-    XLstatus CANGoOnBus();
+    std::thread receiveThread;
     XLstatus GoOffBus() override;
     XLstatus CANSend(XLevent* xlEvent, unsigned int messageCount);
     XLstatus CANResetFilter();
     XLstatus CANSetFilter(unsigned long first_id, unsigned long last_id);
     const char* GetChannelName(int channel);
-    void updateRxPayloads(s_xl_can_msg msg, std::string dir = "RX");
+    void updateRxPayloads(XLevent& xlEvent, std::string dir = "Rx");    
     void printRxPayloads();
     std::vector<std::pair<std::pair<std::vector<unsigned long>, std::string>, std::vector<unsigned char>>> getRxPayloads() {return rxPayloads;}
-    // void getRxPayloads(std::ostream& os);
 
 private:
 
     std::shared_mutex       mtxCAN;
+    XLstatus CANInit();
+    XLstatus CANGoOnBus();
     XLstatus canGetChannelMask();
-    XLstatus canInit();
+    XLstatus HardwareInit();
     XLstatus canCreateRxThread();
-    
-    XLaccess         m_xlChannelMask;        // we support only two channels
-    int              m_xlChannelIndex;       // we support only two channels
-    XLportHandle     m_xlPortHandle;            // and one port
-    XLaccess         m_xlChannelMask_both;      // combined channel mask
-    XLdriverConfig   m_xlDrvConfig;             // driver configuration
+    void canLogger(const XLevent& xlEvent, const std::string dir);
+
+    XLaccess         m_xlChannelMask;
+    int              m_xlChannelIndex;
+    XLportHandle     m_xlPortHandle;
+    XLaccess         m_xlChannelMask_both;
+    XLdriverConfig   m_xlDrvConfig;
     unsigned long    m_xlbaudrate;
     HANDLE           m_hThread;
     XLhandle         m_hMsgEvent;
     int              m_bInitDone;
-    char            m_AppName[XL_MAX_APPNAME + 1] = "TsCAN";               //!< Application name which is displayed in VHWconf
+    char            m_AppName[XL_MAX_APPNAME + 1] = "TsCAN";
     // id, length, Tx/Rx, payloads
     std::vector<std::pair<std::pair<std::vector<unsigned long>, std::string>, std::vector<unsigned char>>> rxPayloads;
 
 };
 
-// DWORD     WINAPI RxThread(PVOID par, std::string& eventString);
 TS_API void RxThread (CAN &can, TStruct &par);
 
 #endif // TSCAN_H

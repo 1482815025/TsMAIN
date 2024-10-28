@@ -36,12 +36,21 @@ typedef struct {
 class TS_API CANFD : public IBus
 {
 public:
-    CANFD(unsigned long arbitrationBitRate = 500000, unsigned long dataBitRate = 1000000) {
-        m_xlChannelMask = 0;
-        m_xlChannelIndex = -1;
-        rxPayloads = {};
-        m_xlDrvConfig = {};
-
+    /**
+     * \brief Constructor of CANFD.
+     * 
+     * \param arbitrationBitRate Arbitration CAN bus timing for nominal / arbitration bit rate in bit/s.
+     * \param dataBitRate CAN bus timing for data bit rate in bit/s. Range: dataBitRate >= max(arbitrationBitRate, 25000).
+     * \param flag Flag of whether the measurement should be logged.
+     */
+    CANFD(unsigned long arbitrationBitRate = 500000, unsigned long dataBitRate = 2000000, bool flag = false)
+    : IBus(flag),
+    m_xlChannelMask(0),
+    m_xlChannelIndex(0),
+    m_xlPortHandle(-1),
+    rxPayloads(),
+    m_xlDrvConfig()
+    {
         memset(&fdParams, 0, sizeof(fdParams));
         // arbitration bitrate
         fdParams.arbitrationBitRate = arbitrationBitRate;
@@ -60,24 +69,23 @@ public:
     };
     
     ~CANFD();
-
-    XLstatus CANFDInit();
-    XLstatus CANFDGoOnBus();
+    std::thread receiveThreadfd;
     XLstatus GoOffBus() override;
     XLstatus CANFDSend(XLcanTxEvent* canTxEvt, unsigned int messageCount);
     XLstatus CANFDResetFilter();
     XLstatus CANFDSetFilter(unsigned long first_id, unsigned long last_id);
-    const char* GetChannelName(int channel);
-    void updateRxPayloads(XL_CAN_EV_RX_MSG msg, std::string dir = "RX");
+    void updateRxPayloads(XLcanRxEvent& xlCanfdRxEvt, std::string dir = "Rx");
     std::vector<std::pair<std::pair<std::vector<unsigned long>, std::string>, std::vector<unsigned char>>> getRxPayloads() {return rxPayloads;}
     void printRxPayloads();
-    // void getRxPayloads(std::ostream& os);
 
 private:
-    std::shared_mutex       mtxCANFD;
-    XLstatus         canfdGetChannelMask();
-    XLstatus         canfdInit();
-    XLstatus         canfdCreateRxThread();
+    std::shared_mutex mtxCANFD;
+    void canfdLogger(const XLcanRxEvent& xlCanfdRxEvt, const std::string dir);
+    XLstatus CANFDInit();
+    XLstatus CANFDGoOnBus();
+    XLstatus canfdGetChannelMask();
+    XLstatus HardwareInit();
+    XLstatus canfdCreateRxThread();
 
     XLaccess         m_xlChannelMask;        //!< we support only two channels
     int              m_xlChannelIndex;       //!< we support only two channels

@@ -2,3 +2,4 @@ build/*
 *.dbc
 *.ldf
 *.exe
+*.asc

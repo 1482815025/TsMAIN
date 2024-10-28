@@ -38,133 +38,54 @@ TS_API typedef struct{
 class TS_API LIN : public IBus
 {
 public:
-
     /**
-     * @brief Constructs a LIN object with the specified parameters.
+     * \brief Constructor of LIN.
      * 
-     * @param baudrate The baudrate for LIN communication.
-     * @param LinVersion The version of the LIN protocol.
-     * @param isMaster Specifies whether the LIN object is a master or slave.
+     * \param baudrate This value specifies the real bit rate.
+     * \param LinVersion LIN protocol version.
+     * \param isMaster Indicates whether the channel is a master or a slave.
+     * \param flag Flag of whether the measurement should be logged.
      */
-    LIN(int baudrate, unsigned int LinVersion, bool isMaster = true);
+    LIN(int baudrate = DEFAULT_LIN_BAUDRATE, unsigned int LinVersion = XL_LIN_VERSION_2_0, bool isMaster = true, bool flag = false)
+    : IBus(flag),
+    m_baudrate(baudrate),
+    m_LinVersion(LinVersion),
+    m_xlPortHandle(-1),
+    m_xlChannelMask(0),
+    m_xlChannelIndex(0)
+    {
+        LINGetDevice();
+        LINInit(isMaster);
+    }
     virtual ~LIN();
-
-
-    /**
-     * Sends a master request on the LIN bus.
-     * WARNING: To be used only for a master simulation.
-     *
-     * @param linID The LIN ID of the master request.
-     * @return The status of the request.
-     */
-    XLstatus            LINSendMasterReq(unsigned int linID);
-
-    /**
-     * @brief Closes the LIN communication and releases associated resources.
-     *
-     * This function deactivates the LIN channels, closes the LIN port, and closes the LIN driver.
-     * It also waits for the receive thread to finish before returning.
-     *
-     * @return The status of the LIN close operation. Returns XL_SUCCESS (0) if successful, or an error code if there was a failure.
-     */
-    XLstatus            GoOffBus() override;
-
-    /**
-     * Sets the LIN slave configuration for the specified LIN ID.
-     *
-     * @param linID The LIN ID of the slave.
-     * @param data An array of 8 bytes representing the data to be sent by the slave.
-     * @param dlc The data length code (DLC) specifying the number of bytes in the data array.
-     * @return The XLstatus indicating the success or failure of the operation.
-     */
-    XLstatus            linSetSlave(unsigned int linID, unsigned char data[8], unsigned int dlc);
-
-
-
-    /**
-     * @brief Creates and starts a receive thread for LIN communication.
-     * 
-     * This function creates a receive thread for LIN communication and starts it. 
-     * The receive thread is responsible for receiving LIN messages and handling them.
-     * 
-     * @return The status of the operation. Returns XL_SUCCESS if successful, otherwise an error code.
-     */
-    XLstatus            linCreateRxThread();
-    std::thread&        getRxThread() { return receiveThread; }
-    XLstatus            updateRxPayloads(XLevent* pEvent);
-    void                printRxPayloads();
-    std::vector<rxPayload> getRxPayloads() { return linRxPayloads; }
+    std::thread      receiveThreadLin;
+    XLstatus                GoOffBus() override;
+    XLstatus                linSetSlave(unsigned int linID, unsigned char data[8], unsigned int dlc);
+    XLstatus                linCreateRxThread();
+    XLstatus                LINSendMasterReq(unsigned int linID);
+    XLstatus                updateRxPayloads(XLevent* pEvent);
+    void                    printRxPayloads();
+    std::vector<rxPayload>  getRxPayloads() { return linRxPayloads; }
 
 private:
 
-    std::shared_mutex mtxLIN;
-    /**
-     * @brief Retrieves the LIN device and initializes the LIN communication.
-     * 
-     * This function opens the LIN driver, retrieves the LIN channel mask,
-     *  and ensures that at least one LIN channel is available for MASTER/SLAVE configuration.
-     * 
-     * @return The status of the LIN device retrieval and initialization.
-     */
-    XLstatus LINGetDevice();
-
-    /**
-     * Initializes the LIN communication.
-     *
-     * @param baudrate The desired baud rate for the LIN communication.
-     * @param LinVersion The version of the LIN protocol to be used.
-     * @param isMaster Specifies whether the LIN communication is in master mode or not.
-     * @return The status of the LIN initialization.
-     */
-    XLstatus LINInit(int baudrate = DEFAULT_LIN_BAUDRATE, unsigned int LinVersion = XL_LIN_VERSION_2_0, bool isMaster = true);
-
-    /**
-     * Retrieves the channel mask for the LIN bus.
-     * Check hardware support for LIN and get the channel mask.
-     * 
-     * @return The XLstatus indicating the success or failure of the operation.
-     */
-    XLstatus         linGetChannelMask();
-    /**
-     * Initializes the LIN channel as a master with the specified baudrate and LIN version.
-     * 
-     * Including setting the master mode, and set checksum(XL_LIN_CHECKSUM_ENHANCED) and DLC(8) for all LINId.
-     *
-     * @param baudrate The desired baudrate for the LIN communication.
-     * @param LinVersion The LIN version to be used.
-     * @return The status of the initialization process.
-     */
-    XLstatus         linInitMaster(int baudrate, unsigned int LinVersion);
-    /**
-     * Initializes the LIN channel as a slave with the specified baudrate and LIN version.
-     * Including setting the slave mode, and set checksum(XL_LIN_CHECKSUM_ENHANCED) and DLC(8) for all LINId.
-     *
-     * @param baudrate The baudrate to set for the LIN channel.
-     * @param LinVersion The LIN version to set for the LIN channel.
-     * @return The status of the initialization process.
-     */
-    XLstatus         linInitSlave(int baudrate, unsigned int LinVersion);
-
-    /**
-     * Activates the LIN channel.
-     * 
-     * This function activates the LIN channel by calling the xlActivateChannel function with the appropriate parameters.
-     * It also sets the timer rate to 100 and flushes the receive queue.
-     * 
-     * @return The status of the activation process. Returns XL_SUCCESS if successful, otherwise an error code.
-     */
+    std::shared_mutex   mtxLIN;
+    void linLogger(const XLevent* xlEvent, const std::string dir);
+    XLstatus            LINGetDevice();
+    XLstatus            LINInit(bool isMaster = true);
+    XLstatus            linGetChannelMask();
+    XLstatus            linInitMaster();
+    XLstatus            linInitSlave();
     XLstatus            linActivateChannel();
-
-    XLaccess         m_xlChannelMask;
-    int              m_xlChannelIndex;
-    XLportHandle     m_xlPortHandle;
-    XLhandle         m_hMsgEvent;
-    HANDLE           m_hThread;
-    int              m_baudrate;
-    unsigned int     m_LinVersion;
-    char            m_AppName[XL_MAX_APPNAME + 1] = "TsLIN";               //!< Application name which is displayed in VHWconf
-    std::thread     receiveThread;
-
+    XLaccess            m_xlChannelMask;
+    int                 m_xlChannelIndex;
+    XLportHandle        m_xlPortHandle;
+    XLhandle            m_hMsgEvent;
+    HANDLE              m_hThread;
+    int                 m_baudrate;
+    unsigned int        m_LinVersion;
+    char                m_AppName[XL_MAX_APPNAME + 1] = "TsLIN";
+    bool                m_bInitDone;
     // id, dlc, Tx/Rx, payload
     std::vector<rxPayload> linRxPayloads;
 };
