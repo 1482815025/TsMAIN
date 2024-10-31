@@ -11,7 +11,8 @@ DbcParser dbcFile;
 LdfParser ldfFile;
 SendFunc* monitorCAN = new SendFunc();
 SendFunc* monitorLIN = new SendFunc();
-std::thread sendThreadCAN;
+std::vector<CyclicThreadCAN*> SendThreadsCAN;
+std::vector<CyclicThreadCANFD*> SendThreadsCANFD;
 std::thread sendThreadLIN;
 std::thread inputThread;
 Payloads_CAN encodedPayloadsCAN;
@@ -42,7 +43,7 @@ int main() {
 			}
 			canfd = std::make_shared<CANFD>(dbcFile.Baudrate, dbcFile.BaudRateCANFD, TsMAINLogFlag);
 			canfd->attach(monitorCAN);
-			sendThreadCAN = std::thread(SendCANFDEncodedPayloadsThread, canfd, std::ref(encodedPayloadsCAN));
+			SendThreadsCANFD = SendCANFDEncodedPayloadsThread(canfd, encodedPayloadsCAN);
 		}
 		else if (dbcFile.databaseBusType == BusType::CAN) {
 			if (!test_config.dbc_node.empty()) {
@@ -55,7 +56,7 @@ int main() {
 			}
 			can = std::make_shared<CAN>(dbcFile.Baudrate, TsMAINLogFlag);
 			can->attach(monitorCAN);
-			sendThreadCAN = std::thread(SendCANEncodedPayloadsThread, can, std::ref(encodedPayloadsCAN));
+			SendThreadsCAN = SendCANEncodedPayloadsThread(can, encodedPayloadsCAN);
 		}
 		else {
 			std::cout << "Invalid bus type." << std::endl;
@@ -127,9 +128,19 @@ int main() {
 		std::cout << "Invalid configuration." << std::endl;
 	}
 
-	if (sendThreadCAN.joinable()) {
-		sendThreadCAN.join();
-	}
+	// if (SendThreadsCAN.size() > 0) {
+	// 	for (auto* thread : SendThreadsCAN) {
+	// 		delete thread;
+	// 	}
+	// 	can->GoOffBus();
+	// }
+	// if (SendThreadsCANFD.size() > 0) {
+	// 	for (auto* thread : SendThreadsCANFD) {
+	// 		delete thread;
+	// 	}
+	// 	canfd->GoOffBus();
+	// }
+	
 	if (sendThreadLIN.joinable()) {
 		sendThreadLIN.join();
 		lin->GoOffBus();

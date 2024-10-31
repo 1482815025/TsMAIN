@@ -62,28 +62,6 @@ static uint8_t crc_table[256] =
 0x97, 0x8A, 0xAD, 0xB0, 0xE3, 0xFE, 0xD9, 0xC4
 };
 
-class SendFunc : public Observer {
-public:
-    SendFunc() {
-        this->db = nullptr;
-        realTimeSignals = {};
-    }
-    void setDB(dbParser* db) { this->db = db; }
-    void update(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) override;
-    std::map<unsigned long, std::map<std::string, double>> getRealTimeSignals() {return realTimeSignals;}
-    void printRealTimeSignals() {
-        for (auto& m : realTimeSignals) {
-            std::cout << "\nMessage id: 0x" << std::hex << m.first << std::dec << std::endl;
-            for (auto& s : m.second) {
-                std::cout << "\t" << s.first << ": " << s.second << std::endl;
-            }
-        }
-    }
-private:
-    dbParser* db;
-    std::map<unsigned long, std::map<std::string, double>> realTimeSignals;
-};
-
 /**
  * @brief Generates a CRC checksum for the given data.
  *
@@ -112,13 +90,74 @@ void E2E_PayloadGeneration(std::vector<unsigned char>& payload, std::vector<unsi
  */
 SENDFUNCTION_API unsigned char getDlcFromDataLength(unsigned int length);
 
+class CyclicThread {
+public:
+    CyclicThread(Payload_CAN& _payload) 
+    : payload(_payload), interval_(_payload.cycleTime*1000), cnt(0) {}
+
+    virtual ~CyclicThread() {}
+
+protected:
+    unsigned long interval_;
+    Payload_CAN payload;
+    unsigned short cnt;
+};
+
+
+class CyclicThreadCAN : public CyclicThread{
+public:
+    CyclicThreadCAN(std::shared_ptr<CAN> _can, Payload_CAN& _payload);
+    ~CyclicThreadCAN();
+    void run();
+
+private:
+    std::thread thread_;
+    std::shared_ptr<CAN> can;
+    XLevent canMsg[5];
+};
+
+class CyclicThreadCANFD : public CyclicThread {
+public:
+    CyclicThreadCANFD(std::shared_ptr<CANFD> _canfd, Payload_CAN& _payload);
+    ~CyclicThreadCANFD();
+    void run();
+
+private:
+    std::thread thread_;
+    std::shared_ptr<CANFD> canfd;
+    XLcanTxEvent canfdMsg[5];
+};
+
+
+class SendFunc : public Observer {
+public:
+    SendFunc() {
+        this->db = nullptr;
+        realTimeSignals = {};
+    }
+    void setDB(dbParser* db) { this->db = db; }
+    void update(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) override;
+    std::map<unsigned long, std::map<std::string, double>> getRealTimeSignals() {return realTimeSignals;}
+    void printRealTimeSignals() {
+        for (auto& m : realTimeSignals) {
+            std::cout << "\nMessage id: 0x" << std::hex << m.first << std::dec << std::endl;
+            for (auto& s : m.second) {
+                std::cout << "\t" << s.first << ": " << s.second << std::endl;
+            }
+        }
+    }
+private:
+    dbParser* db;
+    std::map<unsigned long, std::map<std::string, double>> realTimeSignals;
+};
+
 /**
  * Sends CAN encoded payloads to the specified CAN FD bus.
  * 
  * @param canfd The CAN FD object used for communication.
  * @param encodedPayloads The Payloads_CAN object containing the payloads to be sent.
  */
-SENDFUNCTION_API void SendCANEncodedPayloadsThread(std::shared_ptr<CAN> can, Payloads_CAN& encodedPayloads);
+SENDFUNCTION_API std::vector<CyclicThreadCAN*> SendCANEncodedPayloadsThread(std::shared_ptr<CAN> can, Payloads_CAN& encodedPayloads);
 
 /**
  * Sends CAN FD encoded payloads to the specified CAN FD bus.
@@ -126,7 +165,7 @@ SENDFUNCTION_API void SendCANEncodedPayloadsThread(std::shared_ptr<CAN> can, Pay
  * @param canfd The CAN FD object used for communication.
  * @param encodedPayloads The Payloads_CAN object containing the payloads to be sent.
  */
-SENDFUNCTION_API void SendCANFDEncodedPayloadsThread(std::shared_ptr<CANFD> canfd, Payloads_CAN& encodedPayloads);
+SENDFUNCTION_API std::vector<CyclicThreadCANFD*> SendCANFDEncodedPayloadsThread(std::shared_ptr<CANFD> canfd, Payloads_CAN& encodedPayloads);
 
 /**
  * Sets the slave and creates a receive thread for LIN communication.

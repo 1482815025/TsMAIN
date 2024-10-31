@@ -21,6 +21,8 @@ enum class BusType {
     CAN_FD
 };
 
+extern PARSER_API std::shared_mutex mtxPayloads_CAN;
+
 class PARSER_API Payload_CAN {
 public:
     unsigned long id;
@@ -45,12 +47,11 @@ public:
     Payloads_CAN() {
         payloads.reserve(1000);
     }
-
-    void addPayload(Payload_CAN);
+    
+    void addPayload(Payload_CAN payload);
     void updatePayload(unsigned long id, unsigned char newValues[], size_t newSize);
-    std::vector<Payload_CAN> getPayloads();
+    std::vector<Payload_CAN> getPayloads() {return payloads;}
 private:
-    mutable std::shared_mutex       mtxPayloads;
     // std::vector<unsigned long> id_cycleTime_sendtype_Dlc, std::vector<unsigned char> payload
     std::vector<Payload_CAN> payloads;
 
