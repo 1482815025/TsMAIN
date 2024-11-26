@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-| File        : Bus.h
+| File        : Bus.hpp
 | Project     : TsAPI
 |
 | Description : General father class for all bus
@@ -9,8 +9,8 @@
 | Date        : 2024/7/22
 |---------------------------------------------------------------------------*/
 
-#ifndef BUS_H
-#define BUS_H
+#ifndef BUS_HPP
+#define BUS_HPP
 
 #include <windows.h>
 #include <iostream>
@@ -54,7 +54,8 @@ inline TS_API std::string timeNow() {
 
 class TS_API IBus {
 private:
-    std::list<Observer*> observers;
+    std::list<ObserverM*> monitors;
+
     void LogHeader() {
         std::string logTime = timeNow();
         logFile << "date " << logTime << std::endl;
@@ -80,18 +81,18 @@ public:
         }
     }
 
-    void attach(Observer* observer) {
-        observers.push_back(observer);
+    void attachMonitor(ObserverM* observer) {
+        monitors.push_back(observer);
     }
 
-    void detach(Observer* observer) {
-        observers.remove(observer);
+    void detachMonitor(ObserverM* observer) {
+        monitors.remove(observer);
     }
 
-    void notify(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) {
-        if (observers.empty()) return;
-        for (auto* observer : observers) {
-            observer->update(id_length_dir, payload);
+    void notifyMonitor(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) {
+        if (monitors.empty()) return;
+        for (auto* observer : monitors) {
+            observer->updatePayload(id_length_dir, payload);
         }
     }
 
@@ -105,4 +106,4 @@ public:
     };    
 };
 
-#endif // BUS_H
+#endif // BUS_HPP

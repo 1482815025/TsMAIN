@@ -15,10 +15,10 @@
 
 #include <vector>
 
-class Observer {
+class ObserverM {
 public:
-    virtual void update(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) = 0;
-    virtual ~Observer() {}
+    virtual void updatePayload(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) = 0;
+    virtual ~ObserverM() {}
 };
 
 #endif /* OBSERVER_HPP */

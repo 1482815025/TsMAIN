@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-| File        : TsCAN.h
+| File        : TsCAN.hpp
 | Project     : TsAPI
 |
 | Description : CAN interface and automation related testing platform for vector hardware
@@ -9,11 +9,11 @@
 | Date        : 2024/7/22
 |---------------------------------------------------------------------------*/
 
-#ifndef TSCAN_H
-#define TSCAN_H
+#ifndef TSCAN_HPP
+#define TSCAN_HPP
 
 // #include <sstream>
-#include "Bus.h"
+#include "Bus.hpp"
 
 #define RECEIVE_EVENT_SIZE         1        // DO NOT EDIT! Currently 1 is supported only
 #define RX_QUEUE_SIZE              4096     // internal driver queue size in CAN events
@@ -96,4 +96,4 @@ private:
 
 TS_API void RxThread (CAN &can, TStruct &par);
 
-#endif // TSCAN_H
+#endif // TSCAN_HPP

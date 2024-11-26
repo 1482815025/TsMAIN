@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-| File        : TsCANFD.h
+| File        : TsCANFD.hpp
 | Project     : TsAPI
 |
 | Description : CANFD interface and automation related testing platform for vector hardware
@@ -9,11 +9,11 @@
 | Date        : 2024/7/22
 |---------------------------------------------------------------------------*/
 
-#ifndef TSCANFD_H
-#define TSCANFD_H
+#ifndef TSCANFD_HPP
+#define TSCANFD_HPP
 
 #include <array>
-#include "Bus.h"
+#include "Bus.hpp"
 
 #define RECEIVE_EVENT_SIZE         1        // DO NOT EDIT! Currently 1 is supported only
 #define RX_QUEUE_SIZE              4096     // internal driver queue size in CAN events
@@ -110,4 +110,4 @@ private:
 // DWORD     WINAPI RxThread_CANFD(PVOID par);
 TS_API void RxThread_CANFD (CANFD &canfd, TStruct_FD &par);
 
-#endif // TSCANFD_H
+#endif // TSCANFD_HPP

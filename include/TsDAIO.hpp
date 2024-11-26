@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-| File        : TsDAIO.h
+| File        : TsDAIO.hpp
 | Project     : TsAPI
 |
 | Description : DA/IO interface and automation related testing platform for vector hardware
@@ -9,10 +9,10 @@
 | Date        : 2024/7/22
 |---------------------------------------------------------------------------*/
 
-#ifndef TsDAIO_H
-#define TsDAIO_H
+#ifndef TsDAIO_HPP
+#define TsDAIO_HPP
 
-#include "Bus.h"
+#include "Bus.hpp"
 
 // defines
 #define RECEIVE_EVENT_COUNT 1
@@ -73,4 +73,4 @@ private:
 
 void daioRxThread(DAIO& daio, TStruct_DAIO& pTh);
 
-#endif // TsDAIO_H
+#endif // TsDAIO_HPP

@@ -9,8 +9,8 @@
 // global variables
 DbcParser dbcFile;
 LdfParser ldfFile;
-SendFunc* monitorCAN = new SendFunc();
-SendFunc* monitorLIN = new SendFunc();
+Monitor* monitorCAN = new Monitor();
+Monitor* monitorLIN = new Monitor();
 std::thread sendThreadCAN;
 std::thread sendThreadLIN;
 std::thread inputThread;
@@ -41,7 +41,7 @@ int main() {
 				}
 			}
 			canfd = std::make_shared<CANFD>(dbcFile.Baudrate, dbcFile.BaudRateCANFD, TsMAINLogFlag);
-			canfd->attach(monitorCAN);
+			canfd->attachMonitor(monitorCAN);
 			sendThreadCAN = std::thread(SendCANFDEncodedPayloadsThread, canfd, std::ref(encodedPayloadsCAN));
 		}
 		else if (dbcFile.databaseBusType == BusType::CAN) {
@@ -54,8 +54,9 @@ int main() {
 				}
 			}
 			can = std::make_shared<CAN>(dbcFile.Baudrate, TsMAINLogFlag);
-			can->attach(monitorCAN);
+			can->attachMonitor(monitorCAN);
 			sendThreadCAN = std::thread(SendCANEncodedPayloadsThread, can, std::ref(encodedPayloadsCAN));
+			
 		}
 		else {
 			std::cout << "Invalid bus type." << std::endl;
@@ -70,7 +71,7 @@ int main() {
 		if (test_config.lin_master && !test_config.ldf_node.empty()) {
 			ldfFile.payloadsGenerator(test_config.ldf_node, encodedPayloadsLIN);
 			lin = std::make_shared<LIN>(linSpeed, XL_LIN_VERSION_2_1, MASTER, TsMAINLogFlag);
-			lin->attach(monitorLIN);
+			lin->attachMonitor(monitorLIN);
 			SetSlaveAndCreateRxThread(lin, encodedPayloadsLIN);
 			if (!test_config.lin_signals.empty()) {
 				unsigned char updatePayload[100];
@@ -89,7 +90,7 @@ int main() {
 		else if (!test_config.lin_master) {
 			ldfFile.payloadsGenerator(test_config.ldf_node, encodedPayloadsLIN);
 			lin = std::make_shared<LIN>(linSpeed, XL_LIN_VERSION_2_1, SLAVE, TsMAINLogFlag);
-			lin->attach(monitorLIN);
+			lin->attachMonitor(monitorLIN);
 			SetSlaveAndCreateRxThread(lin, encodedPayloadsLIN);
 			if (!test_config.lin_signals.empty()) {
 				unsigned char updatePayload[100];

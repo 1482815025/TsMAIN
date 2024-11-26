@@ -14,9 +14,9 @@
 #include <memory>
 #include "dbc_parser.hpp"
 #include "ldf_parser.hpp"
-#include "TsCAN.h"
-#include "TsCANFD.h"
-#include "TsLIN.h"
+#include "TsCAN.hpp"
+#include "TsCANFD.hpp"
+#include "TsLIN.hpp"
 
 #ifdef SEND_FUNCTION_EXPORTS
 #define SENDFUNCTION_API __declspec(dllexport)
@@ -62,23 +62,15 @@ static uint8_t crc_table[256] =
 0x97, 0x8A, 0xAD, 0xB0, 0xE3, 0xFE, 0xD9, 0xC4
 };
 
-class SendFunc : public Observer {
+
+class SENDFUNCTION_API Monitor : public ObserverM {
 public:
-    SendFunc() {
-        this->db = nullptr;
-        realTimeSignals = {};
-    }
+    Monitor();
+    ~Monitor();
     void setDB(dbParser* db) { this->db = db; }
-    void update(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) override;
+    void updatePayload(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) override;
     std::map<unsigned long, std::map<std::string, double>> getRealTimeSignals() {return realTimeSignals;}
-    void printRealTimeSignals() {
-        for (auto& m : realTimeSignals) {
-            std::cout << "\nMessage id: 0x" << std::hex << m.first << std::dec << std::endl;
-            for (auto& s : m.second) {
-                std::cout << "\t" << s.first << ": " << s.second << std::endl;
-            }
-        }
-    }
+    void printRealTimeSignals();
 private:
     dbParser* db;
     std::map<unsigned long, std::map<std::string, double>> realTimeSignals;
@@ -171,12 +163,12 @@ SENDFUNCTION_API void SendMasterRequestByNameThread(std::shared_ptr<LIN> lin, Ld
 
 // CinInputThread template functions
 template<typename BUS_TYPE>
-SENDFUNCTION_API void CinInputThreadCAN(BUS_TYPE bus, DbcParser& dbcFile, Payloads_CAN& encodedPayloads, SendFunc* sendFuncCAN);
+SENDFUNCTION_API void CinInputThreadCAN(BUS_TYPE bus, DbcParser& dbcFile, Payloads_CAN& encodedPayloads, Monitor* sendFuncCAN);
 
-SENDFUNCTION_API void CinInputThreadLIN(std::shared_ptr<LIN> lin, LdfParser& ldfFile, SendFunc* sendFuncLIN);
+SENDFUNCTION_API void CinInputThreadLIN(std::shared_ptr<LIN> lin, LdfParser& ldfFile, Monitor* sendFuncLIN);
 
 template<typename BUS_TYPE>
 SENDFUNCTION_API void CinInputThreadBoth(BUS_TYPE bus, DbcParser& dbcFile, std::shared_ptr<LIN> lin, LdfParser& ldfFile,
- Payloads_CAN& encodedPayloads, SendFunc* sendFuncCAN, SendFunc* sendFuncLIN);
+ Payloads_CAN& encodedPayloads, Monitor* sendFuncCAN, Monitor* sendFuncLIN);
 
 #endif // SENDFUNCTIONS_HPP

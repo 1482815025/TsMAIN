@@ -26,7 +26,7 @@ extern TS_API std::ofstream logFile;
 
 class TaskExecutor {
 public:
-    TaskExecutor() : stop(false) {
+    TaskExecutor() : stop(false), taskCount(0) {
         workerThread = std::thread(&TaskExecutor::processTasks, this);
     }
 
@@ -65,7 +65,11 @@ private:
                 tasks.pop();
             }
             task();
-            --taskCount;
+            {
+                std::unique_lock<std::mutex> lock(queueMutex);
+                --taskCount;
+                if (taskCount == 0) condition.notify_all();
+            }
         }
     }
 

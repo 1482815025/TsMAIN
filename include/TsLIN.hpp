@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-| File        : TsLIN.h
+| File        : TsLIN.hpp
 | Project     : TsAPI
 |
 | Description : LIN interface and automation related testing platform for vector hardware
@@ -9,10 +9,10 @@
 | Date        : 2024/7/22
 |---------------------------------------------------------------------------*/
 
-#ifndef TSLIN_H
-#define TSLIN_H
+#ifndef TSLIN_HPP
+#define TSLIN_HPP
 
-#include "Bus.h"
+#include "Bus.hpp"
 #include "vxlapi.h"
 
 #define RECEIVE_EVENT_SIZE       1     // DO NOT EDIT! Currently 1 is supported only
@@ -92,4 +92,4 @@ private:
 
 TS_API void RxThread_LIN(LIN& lin, TStruct_LIN& pTh);
 
-#endif // TSLIN_H
+#endif // TSLIN_HPP

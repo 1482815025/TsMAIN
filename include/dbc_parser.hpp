@@ -53,8 +53,6 @@ private:
     mutable std::shared_mutex       mtxPayloads;
     // std::vector<unsigned long> id_cycleTime_sendtype_Dlc, std::vector<unsigned char> payload
     std::vector<Payload_CAN> payloads;
-
-
 };
 
 class PARSER_API DbcParser : public dbParser {

@@ -1,0 +1,7 @@
+dbc_file:Exposed1CANandLP1CANSystem_MAIN_29_Exposed1CANCfg_221028.dbc
+ldf_file:E197_WUP80.ldf
+dbc_node:GCCC
+lin_master:1
+ldf_node:DME1
+can_default_values:
+lin_default_values:<0x3b,LIN_CONTROL_SETPOINTRPM_WUP4_3PH,200>
