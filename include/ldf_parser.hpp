@@ -9,6 +9,7 @@
 #ifndef ldf_parser_hpp
 #define ldf_parser_hpp
 
+#include <set>
 #include "frame.hpp"
 #include "payloads.hpp"
 #include "scheduleTable.hpp"
@@ -16,7 +17,7 @@
 class PARSER_API LdfParser : public dbParser {
 
 public:
-
+	std::string ldfName;
 	std::map<std::string, ScheduleTable> getScheduleTableLibrary() const { return scheduleTableLibrary; }
 	std::map<unsigned int, std::string> getScheduleTableIdToName() const { return scheduleTableIdToName; }
 	std::map<int, Frame> getFramesLibrary() const { return framesLibrary; }
@@ -41,6 +42,7 @@ public:
 		);
 	// Print LDF info
 	friend std::ostream& operator<<(std::ostream& os, const LdfParser& ldfFile);
+	std::set<std::string> getAllNodes();
 	void updateSignalValue(unsigned long MessageId, std::string signalName, double newValue, unsigned char *updatePayload);
 
 private:

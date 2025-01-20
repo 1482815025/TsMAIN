@@ -4,9 +4,9 @@
 |
 | Description : General father class for all bus
 |-----------------------------------------------------------------------------
-| Version     : 1.0
+| Version     : 2.0
 | Author      : Hao Zheng
-| Date        : 2024/7/22
+| Date        : 2024/12/22
 |---------------------------------------------------------------------------*/
 
 #ifndef BUS_HPP
@@ -28,82 +28,46 @@
 #include "TaskExecutor.hpp"
 #include "vxlapi.h"
 
-#ifdef TS_EXPORTS
-#define TS_API __declspec(dllexport)
-#elif defined(TS_STATIC)
-#define TS_API
-#else
-#define TS_API __declspec(dllimport)
-#endif
+// External variable declarations
+TS_API extern std::shared_ptr<TaskExecutor> LogTask;
 
-extern TS_API TaskExecutor LogTask;
+// Global Hardware Configuration
+TS_API extern XLdriverConfig xlDrvConfig;
 
-inline TS_API std::string timeNow() {
-    char buffer[100];
-    auto now = std::chrono::system_clock::now();
-    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-    std::tm now_tm = *std::localtime(&now_c);
-    strftime(buffer, sizeof(buffer), "%a %b %d %H:%M:%S. %p %Y", &now_tm);
-    std::string formattedTime = std::string(buffer);
-    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
-                            now.time_since_epoch()).count() % 1000;
-    size_t dotPos = formattedTime.find(".");
-    formattedTime.insert(dotPos + 1, std::to_string(milliseconds));
-    return formattedTime;
-}
+// Global Vector Driver Functions
+TS_API XLstatus HardwareInit();
+TS_API std::vector<int> getCANCapChannels();
+TS_API std::vector<int> getCANFDCapChannels();
+TS_API std::vector<int> getLINCapChannels();
+
+TS_API std::string timeNow();
 
 class TS_API IBus {
 private:
     std::list<ObserverM*> monitors;
 
-    void LogHeader() {
-        std::string logTime = timeNow();
-        logFile << "date " << logTime << std::endl;
-        logFile << "base hex timestamps absolute" << std::endl;
-        logFile << "// version 17.5.0" << std::endl;
-        logFile << "// Measurement UUID:" << std::endl;
-        logFile << "Begin triggerBlock " << logTime << std::endl;
-    }
-
 protected:
     XLuint64 measurementStartTime;
     bool logFlag;
+    void LogHeader();
+    void logInit();
 
 public:
-    IBus(bool flag = false) : logFlag(flag) {
-        if (flag) {
-            if (!HeaderInit) {
-                std::unique_lock<std::shared_mutex> lock(mtxLog);
-                logFile.open("logFile.asc", std::ios::out);
-                LogHeader();
-                HeaderInit.store(true);
-            }
-        }
-    }
+    // Constructor
+    IBus(bool flag = false);
 
-    void attachMonitor(ObserverM* observer) {
-        monitors.push_back(observer);
-    }
+    // Attach and detach observer monitors
+    void attachMonitor(ObserverM* observer);
+    void detachMonitor(ObserverM* observer);
 
-    void detachMonitor(ObserverM* observer) {
-        monitors.remove(observer);
-    }
+    // Notify monitors with payload and id_length_dir information
+    void notifyMonitor(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload);
 
-    void notifyMonitor(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) {
-        if (monitors.empty()) return;
-        for (auto* observer : monitors) {
-            observer->updatePayload(id_length_dir, payload);
-        }
-    }
-
+    // Pure virtual method for derived classes to implement
     virtual XLstatus GoOffBus() = 0;
-    virtual ~IBus() {
-        std::unique_lock<std::shared_mutex> lock(mtxLog);
-        if (logFile.is_open()) {
-            logFile << "End TriggerBlock";
-            logFile.close();
-        }
-    };    
+
+    // Destructor
+    virtual ~IBus();    
 };
 
 #endif // BUS_HPP

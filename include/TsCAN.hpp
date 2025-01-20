@@ -3,16 +3,16 @@
 | Project     : TsAPI
 |
 | Description : CAN interface and automation related testing platform for vector hardware
+|               Multi-Bus supported
 |-----------------------------------------------------------------------------
-| Version     : 1.0
+| Version     : 2.0
 | Author      : Hao Zheng, Mingbo Li
-| Date        : 2024/7/22
+| Date        : 2024/12/11
 |---------------------------------------------------------------------------*/
 
 #ifndef TSCAN_HPP
 #define TSCAN_HPP
 
-// #include <sstream>
 #include "Bus.hpp"
 
 #define RECEIVE_EVENT_SIZE         1        // DO NOT EDIT! Currently 1 is supported only
@@ -39,27 +39,10 @@ typedef struct {
 class TS_API CAN : public IBus
 {
 public:
-    /**
-     * \brief Constructor of CAN.
-     * 
-     * \param baudrate This value specifies the real bit rate.
-     * \param flag Flag of whether the measurement should be logged.
-     */
-    CAN(unsigned long baudrate = 500000, bool flag = false)
-    : IBus(flag),
-    m_xlbaudrate(baudrate),
-    m_xlChannelMask(0),
-    m_xlChannelIndex(-1),
-    m_xlPortHandle(-1),
-    rxPayloads(),
-    m_xlDrvConfig()
-    {
-        CANInit();
-        CANGoOnBus();
-    };
-    
+    CAN(int channel, int appCh = 0, unsigned long baudrate = 500000, bool flag = false);
     ~CAN();
     std::thread receiveThread;
+    XLstatus CANGoOnBus();
     XLstatus GoOffBus() override;
     XLstatus CANSend(XLevent* xlEvent, unsigned int messageCount);
     XLstatus CANResetFilter();
@@ -72,28 +55,27 @@ public:
 private:
 
     std::shared_mutex       mtxCAN;
-    XLstatus CANInit();
-    XLstatus CANGoOnBus();
     XLstatus canGetChannelMask();
     XLstatus HardwareInit();
     XLstatus canCreateRxThread();
     void canLogger(const XLevent& xlEvent, const std::string dir);
+    void RxThread();
 
     XLaccess         m_xlChannelMask;
     int              m_xlChannelIndex;
     XLportHandle     m_xlPortHandle;
-    XLaccess         m_xlChannelMask_both;
     XLdriverConfig   m_xlDrvConfig;
     unsigned long    m_xlbaudrate;
-    HANDLE           m_hThread;
     XLhandle         m_hMsgEvent;
     int              m_bInitDone;
-    char            m_AppName[XL_MAX_APPNAME + 1] = "TsCAN";
+    unsigned int  appChannel;
+    char            m_AppName[XL_MAX_APPNAME + 1] = "TsAPI";
+    bool            g_rxThreadRun;
     // id, length, Tx/Rx, payloads
     std::vector<std::pair<std::pair<std::vector<unsigned long>, std::string>, std::vector<unsigned char>>> rxPayloads;
 
 };
 
-TS_API void RxThread (CAN &can, TStruct &par);
+// TS_API void RxThread (CAN &can, TStruct &par);
 
 #endif // TSCAN_HPP

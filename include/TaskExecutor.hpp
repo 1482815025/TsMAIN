@@ -1,3 +1,14 @@
+/*----------------------------------------------------------------------------
+| File        : TaskExecutor.hpp
+| Project     : TsAPI
+|
+| Description : task queuing system for handling time-consuming tasks.
+|-----------------------------------------------------------------------------
+| Version     : 1.0
+| Author      : Hao Zheng
+| Date        : 2024/12/22
+|---------------------------------------------------------------------------*/
+
 #ifndef TASKEXECUTOR_HPP
 #define TASKEXECUTOR_HPP
 
@@ -11,67 +22,37 @@
 #include <functional>
 #include <condition_variable>
 
-#ifdef TS_EXPORTS
-#define TS_API __declspec(dllexport)
-#elif defined(TS_STATIC)
-#define TS_API
+#ifdef _WIN32
+#  ifdef TS_EXPORTS
+#    define TS_API __declspec(dllexport)
+#  elif defined(TS_STATIC)
+#    define TS_API
+#  else
+#    define TS_API __declspec(dllimport)
+#  endif
 #else
-#define TS_API __declspec(dllimport)
+#  define TS_API
 #endif
 
-extern TS_API std::atomic<bool> stopFlag;
-extern TS_API std::atomic<bool> HeaderInit;
-extern TS_API std::shared_mutex mtxLog;
-extern TS_API std::ofstream logFile;
 
-class TaskExecutor {
+// External variable declarations
+TS_API extern std::atomic<bool> stopFlag;
+TS_API extern std::atomic<bool> HeaderInit;
+TS_API extern std::atomic<bool> clockResetFlag;
+TS_API extern std::shared_mutex mtxLog;
+TS_API extern std::ofstream logFile;
+
+// TaskExecutor class declaration
+class TS_API TaskExecutor {
 public:
-    TaskExecutor() : stop(false), taskCount(0) {
-        workerThread = std::thread(&TaskExecutor::processTasks, this);
-    }
+    TaskExecutor();
+    ~TaskExecutor();
 
-    ~TaskExecutor() {
-        {
-            std::unique_lock<std::mutex> lock(queueMutex);
-            stop = true;
-        }
-        condition.notify_one();
-        workerThread.join();
-    }
-
-    void enqueueTask(const std::function<void()>& task) {
-        {
-            std::unique_lock<std::mutex> lock(queueMutex);
-            tasks.emplace(task);
-            ++taskCount;
-        }
-        condition.notify_one();
-    }
-
-    void waitForAllTasks() {
-        std::unique_lock<std::mutex> lock(queueMutex);
-        condition.wait(lock, [this] { return taskCount == 0; });
-    }
+    void enqueueTask(const std::function<void()>& task);
+    void waitForAllTasks();
 
 private:
-    void processTasks() {
-        while (true) {
-            std::function<void()> task;
-            {
-                std::unique_lock<std::mutex> lock(queueMutex);
-                condition.wait(lock, [this] { return stop || !tasks.empty(); });
-                if (stop && tasks.empty()) return;
-                task = tasks.front();
-                tasks.pop();
-            }
-            task();
-            {
-                std::unique_lock<std::mutex> lock(queueMutex);
-                --taskCount;
-                if (taskCount == 0) condition.notify_all();
-            }
-        }
-    }
+    void processTasks();
 
     std::thread workerThread;
     std::queue<std::function<void()>> tasks;

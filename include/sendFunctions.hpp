@@ -161,14 +161,14 @@ SENDFUNCTION_API void SendMasterRequestByIdThread(std::shared_ptr<LIN> lin, LdfP
  */
 SENDFUNCTION_API void SendMasterRequestByNameThread(std::shared_ptr<LIN> lin, LdfParser& ldfFile, std::string tableName);
 
-// CinInputThread template functions
-template<typename BUS_TYPE>
-SENDFUNCTION_API void CinInputThreadCAN(BUS_TYPE bus, DbcParser& dbcFile, Payloads_CAN& encodedPayloads, Monitor* sendFuncCAN);
+SENDFUNCTION_API void CinInputThreadCAN(std::shared_ptr<CAN> can, DbcParser& dbcFile, Payloads_CAN& encodedPayloads, Monitor* sendFuncCAN);
+
+SENDFUNCTION_API void CinInputThreadCANFD(std::shared_ptr<CANFD> canfd, DbcParser& dbcFile, Payloads_CAN& encodedPayloads, Monitor* sendFuncCAN);
 
 SENDFUNCTION_API void CinInputThreadLIN(std::shared_ptr<LIN> lin, LdfParser& ldfFile, Monitor* sendFuncLIN);
 
-template<typename BUS_TYPE>
-SENDFUNCTION_API void CinInputThreadBoth(BUS_TYPE bus, DbcParser& dbcFile, std::shared_ptr<LIN> lin, LdfParser& ldfFile,
- Payloads_CAN& encodedPayloads, Monitor* sendFuncCAN, Monitor* sendFuncLIN);
+SENDFUNCTION_API void CinInputThreadBothFD(std::shared_ptr<CANFD> canfd, DbcParser& dbcFile, std::shared_ptr<LIN> lin, LdfParser& ldfFile,Payloads_CAN& encodedPayloads, Monitor* sendFuncCAN, Monitor* sendFuncLIN);
+
+SENDFUNCTION_API void CinInputThreadBoth(std::shared_ptr<CAN> can, DbcParser& dbcFile, std::shared_ptr<LIN> lin, LdfParser& ldfFile,Payloads_CAN& encodedPayloads, Monitor* sendFuncCAN, Monitor* sendFuncLIN);
 
 #endif // SENDFUNCTIONS_HPP

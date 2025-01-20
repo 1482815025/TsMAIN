@@ -3,10 +3,11 @@
 | Project     : TsAPI
 |
 | Description : CANFD interface and automation related testing platform for vector hardware
+|               Multi-Bus supported
 |-----------------------------------------------------------------------------
-| Version     : 1.0
+| Version     : 2.0
 | Author      : Hao Zheng, Mingbo Li
-| Date        : 2024/7/22
+| Date        : 2024/12/22
 |---------------------------------------------------------------------------*/
 
 #ifndef TSCANFD_HPP
@@ -36,40 +37,10 @@ typedef struct {
 class TS_API CANFD : public IBus
 {
 public:
-    /**
-     * \brief Constructor of CANFD.
-     * 
-     * \param arbitrationBitRate Arbitration CAN bus timing for nominal / arbitration bit rate in bit/s.
-     * \param dataBitRate CAN bus timing for data bit rate in bit/s. Range: dataBitRate >= max(arbitrationBitRate, 25000).
-     * \param flag Flag of whether the measurement should be logged.
-     */
-    CANFD(unsigned long arbitrationBitRate = 500000, unsigned long dataBitRate = 2000000, bool flag = false)
-    : IBus(flag),
-    m_xlChannelMask(0),
-    m_xlChannelIndex(0),
-    m_xlPortHandle(-1),
-    rxPayloads(),
-    m_xlDrvConfig()
-    {
-        memset(&fdParams, 0, sizeof(fdParams));
-        // arbitration bitrate
-        fdParams.arbitrationBitRate = arbitrationBitRate;
-        fdParams.tseg1Abr = 6;
-        fdParams.tseg2Abr = 3;
-        fdParams.sjwAbr = 2;
-
-        // data bitrate
-        fdParams.dataBitRate = dataBitRate;
-        fdParams.tseg1Dbr = 6;
-        fdParams.tseg2Dbr = 3;
-        fdParams.sjwDbr = 2;
-
-        CANFDInit();
-        CANFDGoOnBus();
-    };
-    
+    CANFD(int channel, int appCh = 0, unsigned long arbitrationBitRate = 500000, unsigned long dataBitRate = 2000000, bool flag = false);
     ~CANFD();
     std::thread receiveThreadfd;
+    XLstatus CANFDGoOnBus();
     XLstatus GoOffBus() override;
     XLstatus CANFDSend(XLcanTxEvent* canTxEvt, unsigned int messageCount);
     XLstatus CANFDResetFilter();
@@ -77,37 +48,33 @@ public:
     void updateRxPayloads(XLcanRxEvent& xlCanfdRxEvt, std::string dir = "Rx");
     std::vector<std::pair<std::pair<std::vector<unsigned long>, std::string>, std::vector<unsigned char>>> getRxPayloads() {return rxPayloads;}
     void printRxPayloads();
+    
 
 private:
+    
     std::shared_mutex mtxCANFD;
-    void canfdLogger(const XLcanRxEvent& xlCanfdRxEvt, const std::string dir);
-    XLstatus CANFDInit();
-    XLstatus CANFDGoOnBus();
     XLstatus canfdGetChannelMask();
     XLstatus HardwareInit();
     XLstatus canfdCreateRxThread();
+    void canfdLogger(const XLcanRxEvent& xlCanfdRxEvt, const std::string dir);
+    void RxThread_CANFD();
 
     XLaccess         m_xlChannelMask;        //!< we support only two channels
     int              m_xlChannelIndex;       //!< we support only two channels
     XLportHandle     m_xlPortHandle;            //!< and one port
-    XLaccess         m_xlChannelMask_both;
     XLdriverConfig   m_xlDrvConfig;
-
     XLcanFdConf   fdParams;
-
-
-
     HANDLE           m_hThread;
     XLhandle         m_hMsgEvent;
     int              m_bInitDone;
-
-    char             m_AppName[XL_MAX_APPNAME + 1] = "TsCANFD";               //!< Application name which is displayed in VHWconf
+    unsigned int    appChannel;
+    char             m_AppName[XL_MAX_APPNAME + 1] = "TsAPI";
+    bool g_fdrxThreadRun = true;
     // id, length, Tx/Rx, payloads
     std::vector<std::pair<std::pair<std::vector<unsigned long>, std::string>, std::vector<unsigned char>>> rxPayloads;
 
 };
 
 // DWORD     WINAPI RxThread_CANFD(PVOID par);
-TS_API void RxThread_CANFD (CANFD &canfd, TStruct_FD &par);
 
 #endif // TSCANFD_HPP

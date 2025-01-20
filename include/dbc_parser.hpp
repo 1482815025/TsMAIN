@@ -10,6 +10,7 @@
 
 #include <mutex>
 #include <shared_mutex>
+#include <set>
 #include "message.hpp"
 
 constexpr unsigned short MAX_MSG_LEN_CAN = 8;
@@ -20,6 +21,8 @@ enum class BusType {
     CAN,
     CAN_FD
 };
+
+extern PARSER_API std::shared_mutex mtxPayloads_CAN;
 
 class PARSER_API Payload_CAN {
 public:
@@ -45,14 +48,15 @@ public:
     Payloads_CAN() {
         payloads.reserve(1000);
     }
-
-    void addPayload(Payload_CAN);
+    
+    void addPayload(Payload_CAN payload);
     void updatePayload(unsigned long id, unsigned char newValues[], size_t newSize);
-    std::vector<Payload_CAN> getPayloads();
+    std::vector<Payload_CAN> getPayloads() {return payloads;}
 private:
-    mutable std::shared_mutex       mtxPayloads;
     // std::vector<unsigned long> id_cycleTime_sendtype_Dlc, std::vector<unsigned char> payload
     std::vector<Payload_CAN> payloads;
+
+
 };
 
 class PARSER_API DbcParser : public dbParser {
@@ -65,6 +69,7 @@ public:
 
     unsigned int Baudrate = 0;
     unsigned int BaudRateCANFD = 0;
+    std::string dbcName;
 
     // Construct using either a File or a Stream of a DBC-File
     // A bool is used to indicate whether parsing succeeds or not
@@ -96,6 +101,7 @@ public:
      * @param encodedPayloads The encoded payloads object to update.
      */
     void NodeMsgGenerator(std::string Node, Payloads_CAN& encodedPayloads);
+    std::set<std::string> getAllNodes();
     BusType databaseBusType = BusType::NotSet; // CAN or CAN FD
     unsigned short MAX_MSG_LEN;
 
@@ -128,6 +134,7 @@ private:
     void loadAndParseFromFile(std::istream& in);
     void consistencyCheck();
     std::vector<std::pair<unsigned long,std::vector<std::pair<std::string, double>>>> NodeSignals;
+    
 
 };
 
