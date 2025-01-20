@@ -62,11 +62,11 @@ public:
 	void setSigValueType(const int sigValueTypeIdentifier);
 	// Decode/Encode
 	double decodeSignal(unsigned char const rawPayload[],
-		unsigned short const MAX_MSG_LEN,
+		unsigned short const MAX_MSG_LE,
 		unsigned int const messageSize);
 	void encodeSignal(const double physicalValue,
 		unsigned char encodedPayload[],
-		unsigned short const MAX_MSG_LEN);
+		unsigned short const MAX_MSG_LE);
 	std::istream& parseSignalValueDescription(std::istream& in);
 	// Operator overload, allows parsing of signals info
 	friend std::istream& operator>>(std::istream& in, Signal& sig);

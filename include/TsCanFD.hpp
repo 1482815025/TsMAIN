@@ -37,7 +37,7 @@ typedef struct {
 class TS_API CANFD : public IBus
 {
 public:
-    CANFD(int channel, int appCh = 0, unsigned long arbitrationBitRate = 500000, unsigned long dataBitRate = 2000000, bool flag = false);
+    CANFD(int channel, XLcanFdConf Params, int appCh = 0, bool flag = false);
     ~CANFD();
     std::thread receiveThreadfd;
     XLstatus CANFDGoOnBus();

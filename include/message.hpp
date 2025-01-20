@@ -52,13 +52,13 @@ public:
     // Used to encode/decode messages
     std::map<std::string, double> decode(
         unsigned char const rawPayload[],
-        unsigned short const MAX_MSG_LEN,
+        unsigned short const MAX_MSG_LE,
         unsigned int const dlc
     );
     unsigned int encode(
         std::vector<std::pair<std::string, double> >& signalsToEncode,
         unsigned char encodedPayload[],
-        unsigned short const MAX_MSG_LEN,
+        unsigned short const MAX_MSG_LE,
         double const defaultGlobalInitialValue
     );
     // Overload of operator>> to enable parsing of Messages from streams of DBC-Files

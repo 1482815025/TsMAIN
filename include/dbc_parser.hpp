@@ -103,7 +103,7 @@ public:
     void NodeMsgGenerator(std::string Node, Payloads_CAN& encodedPayloads);
     std::set<std::string> getAllNodes();
     BusType databaseBusType = BusType::NotSet; // CAN or CAN FD
-    unsigned short MAX_MSG_LEN;
+    // unsigned short MAX_MSG_LEN;
 
 
     /**

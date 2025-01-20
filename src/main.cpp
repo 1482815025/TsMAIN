@@ -2,73 +2,69 @@
 // #include <sstream>
 // #include <stdexcept>
 #include <windows.h>
-#include "ldf_parser.hpp"
 #include "sendFunctions.hpp"
-#include "readConfig.hpp"
+#include "Getway.hpp"
 
 // global variables
 DbcParser dbcFile;
-LdfParser LDFfile;
-Monitor* monitorCAN = new Monitor();
-Monitor* monitorLIN = new Monitor();
 std::thread sendThreadCAN;
-std::thread sendThreadLIN;
-std::thread inputThread;
 Payloads_CAN encodedPayloadsCAN;
-Payloads_LIN encodedPayloadsLIN;
+Payloads_CAN filteredPayloads;
 std::shared_ptr<CANFD> canfd;
-std::shared_ptr<LIN> lin;
-
-Config test_config;
-bool TsMAINLogFlag = true;
+std::shared_ptr<CANFD> canfd2;
+Getway* getwayA = new Getway();
+Getway* getwayB = new Getway();
+XLcanFdConf fdParams;
 
 int main() {
+    memset(&fdParams, 0, sizeof(fdParams));
+    // arbitration bitrate
+    fdParams.arbitrationBitRate = 625000;
+    fdParams.tseg1Abr = 101;
+    fdParams.tseg2Abr = 26;
+    fdParams.sjwAbr = 26;
 
-    if (!readIniValue(test_config)) {
-        std::cerr << "Error reading config.ini file." << std::endl;
-        return 1;
-    }
-
+    // data bitrate
+    fdParams.dataBitRate = 1428571;
+    fdParams.tseg1Dbr = 33;
+    fdParams.tseg2Dbr = 22;
+    fdParams.sjwDbr = 22;
+	try{
+		getwayA->setUnpassedMsgId({0x70, 0x76});
+		getwayB->setOverWriteMsgId({0x510});
 		HardwareInit();
-		dbcFile.parse(test_config.dbc_file);
-		monitorCAN->setDB(&dbcFile);
-		dbcFile.NodeMsgGenerator(test_config.dbc_node, encodedPayloadsCAN);
-		for (auto& signal : test_config.can_signals) {
-			dbcFile.updateSignalValue(std::get<0>(signal), std::get<1>(signal), std::get<2>(signal), encodedPayloadsCAN);
+		dbcFile.parse("SPA3");
+		dbcFile.NodeMsgGenerator("HVBM", encodedPayloadsCAN);
+		dbcFile.updateSignalValue(0x70, "signal", 3000, encodedPayloadsCAN);
+		dbcFile.updateSignalValue(0x76, "signal", 10, encodedPayloadsCAN);
+		for (auto payload : encodedPayloadsCAN.getPayloads()) {
+			if (payload.id == 0x70 || payload.id == 0x76) {
+				filteredPayloads.addPayload(payload);
+			}
 		}
-		canfd = std::make_shared<CANFD>(3,0,dbcFile.Baudrate, dbcFile.BaudRateCANFD, TsMAINLogFlag);
-		canfd->attachMonitor(monitorCAN);
+		
+		canfd = std::make_shared<CANFD>(3, fdParams, 0);
 		canfd->CANFDGoOnBus();
-		
-		sendThreadCAN = std::thread(SendCANFDEncodedPayloadsThread, canfd, std::ref(encodedPayloadsCAN));
-		LDFfile.parse(test_config.ldf_file);
-		monitorLIN->setDB(&LDFfile);
-		unsigned int linSpeed = LDFfile.getLinSpeed()*1000;
+		canfd->attachMonitor(getwayA);
+		canfd2 = std::make_shared<CANFD>(4, fdParams, 1);
+		canfd2->attachMonitor(getwayB);
+		getwayA->setOutput(canfd2.get());
+		getwayB->setOutput(canfd.get());
+		sendThreadCAN = std::thread(SendCANFDEncodedPayloadsThread, canfd2, std::ref(encodedPayloadsCAN));
 
-		LDFfile.payloadsGenerator(test_config.ldf_node, encodedPayloadsLIN);
-		lin = std::make_shared<LIN>(1,0,linSpeed, XL_LIN_VERSION_2_1, MASTER, TsMAINLogFlag);
-
-		lin->attachMonitor(monitorLIN);
-		unsigned char* p;
-		for (auto& payload : encodedPayloadsLIN.getPayloads()) {
-			p = payload.getPayload().data();
-			lin->linSetSlave(payload.frameId, p, payload.dlc);
-		}
-		lin->LINGoOnBus();
-		sendThreadLIN = std::thread(SendMasterRequestByIdThread, lin, std::ref(LDFfile), 1);
-		Sleep(1000);
-		inputThread = std::thread(CinInputThreadBothFD, canfd, std::ref(dbcFile), lin, std::ref(LDFfile), std::ref(encodedPayloadsCAN), monitorCAN, monitorLIN);
-		
-		if (inputThread.joinable()) {
-			inputThread.join();
-			LogTask->waitForAllTasks();
-			canfd->GoOffBus();
-			lin->GoOffBus();
-			Sleep(100);
+		while(true) {
+			Sleep(10000);
 		}
 
+		canfd->GoOffBus();
+		canfd2->GoOffBus();
 
-
+	} catch (std::invalid_argument& err) {
+		std::cerr << "[Exception catched] " << err.what() << '\n';
+	}
+	
+	system("pause");
+}
 
 	// if (!test_config.dbc_file.empty()) {
 	// 	dbcFile.parse(test_config.dbc_file);
@@ -176,6 +172,6 @@ int main() {
 	// 	std::cout << "Invalid configuration." << std::endl;
 	// }
 
-	system("pause");
-	return 0;
-}
+// 	system("pause");
+// 	return 0;
+// }
