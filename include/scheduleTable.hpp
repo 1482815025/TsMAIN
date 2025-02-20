@@ -39,6 +39,4 @@ private:
 
 };
 
-
-
 #endif /* scheduleTable_hpp */

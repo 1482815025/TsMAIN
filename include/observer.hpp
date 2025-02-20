@@ -14,10 +14,14 @@
 #define OBSERVER_HPP
 
 #include <vector>
+#include "vxlapi.h"
 
 class ObserverM {
 public:
-    virtual void updatePayload(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) = 0;
+    virtual void updatePayload(XLcanRxEvent xlCanfdRxEvt) = 0;
+    virtual void updatePayload(XLevent xlEvent) = 0;
+    virtual void updateDIOPayload(unsigned int data) = 0;
+    virtual void updateAINPayload(XL_IO_ANALOG_DATA data) = 0;
     virtual ~ObserverM() {}
 };
 

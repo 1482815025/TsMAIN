@@ -17,6 +17,7 @@
 #include "TsCAN.hpp"
 #include "TsCANFD.hpp"
 #include "TsLIN.hpp"
+#include "TsDAIO.hpp"
 
 #ifdef SEND_FUNCTION_EXPORTS
 #define SENDFUNCTION_API __declspec(dllexport)
@@ -62,18 +63,33 @@ static uint8_t crc_table[256] =
 0x97, 0x8A, 0xAD, 0xB0, 0xE3, 0xFE, 0xD9, 0xC4
 };
 
+struct realTimeMessage {
+    double timeStamps;
+    unsigned short CH;
+    unsigned long MsgId;
+    std::string MsgName;
+    std::string Type;
+    std::string Dir;
+    unsigned short DLC;
+    std::vector<unsigned char> Data;
+    std::map<std::string, double> Signals;
+};
+
+using MessageMap = std::map<std::pair<unsigned long, std::string>, realTimeMessage>;
 
 class SENDFUNCTION_API Monitor : public ObserverM {
 public:
     Monitor();
     ~Monitor();
     void setDB(dbParser* db) { this->db = db; }
-    void updatePayload(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload) override;
-    std::map<unsigned long, std::map<std::string, double>> getRealTimeSignals() {return realTimeSignals;}
+    void updatePayload(XLcanRxEvent xlCanfdRxEvt) override;
+    void updatePayload(XLevent xlEvent) override;
+    MessageMap getRealTimeSignals() {return realTimeMessages;}
     void printRealTimeSignals();
 private:
+    std::shared_mutex mtxRealTime;
     dbParser* db;
-    std::map<unsigned long, std::map<std::string, double>> realTimeSignals;
+    MessageMap realTimeMessages;
 };
 
 /**
@@ -104,13 +120,15 @@ void E2E_PayloadGeneration(std::vector<unsigned char>& payload, std::vector<unsi
  */
 SENDFUNCTION_API unsigned char getDlcFromDataLength(unsigned int length);
 
+SENDFUNCTION_API unsigned int getDataLengthFromDlc(unsigned int dlc);
+
 /**
  * Sends CAN encoded payloads to the specified CAN FD bus.
  * 
  * @param canfd The CAN FD object used for communication.
  * @param encodedPayloads The Payloads_CAN object containing the payloads to be sent.
  */
-SENDFUNCTION_API void SendCANEncodedPayloadsThread(std::shared_ptr<CAN> can, Payloads_CAN& encodedPayloads);
+SENDFUNCTION_API void SendCANEncodedPayloadsThread(std::shared_ptr<CAN> can, const std::shared_ptr<Payloads_CAN> encodedPayloads);
 
 /**
  * Sends CAN FD encoded payloads to the specified CAN FD bus.
@@ -118,7 +136,7 @@ SENDFUNCTION_API void SendCANEncodedPayloadsThread(std::shared_ptr<CAN> can, Pay
  * @param canfd The CAN FD object used for communication.
  * @param encodedPayloads The Payloads_CAN object containing the payloads to be sent.
  */
-SENDFUNCTION_API void SendCANFDEncodedPayloadsThread(std::shared_ptr<CANFD> canfd, Payloads_CAN& encodedPayloads);
+SENDFUNCTION_API void SendCANFDEncodedPayloadsThread(std::shared_ptr<CANFD> canfd, const std::shared_ptr<Payloads_CAN> encodedPayloads);
 
 /**
  * Sets the slave and creates a receive thread for LIN communication.
@@ -126,7 +144,7 @@ SENDFUNCTION_API void SendCANFDEncodedPayloadsThread(std::shared_ptr<CANFD> canf
  * @param lin The LIN object for communication.
  * @param payloads The Payloads object containing the payloads to be sent.
  */
-SENDFUNCTION_API void SetSlaveAndCreateRxThread(std::shared_ptr<LIN> lin, Payloads_LIN& payloads);
+SENDFUNCTION_API void SetSlaveAndCreateRxThread(std::shared_ptr<LIN> lin, const Payloads_LIN& payloads);
 
 /**
  * Updates the slave with the specified LIN ID by setting the value of the given signal.

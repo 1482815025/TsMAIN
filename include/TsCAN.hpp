@@ -40,7 +40,7 @@ class TS_API CAN : public IBus
 {
 public:
     CAN(int channel, int appCh = 0, unsigned long baudrate = 500000, bool flag = false);
-    ~CAN();
+    ~CAN() override;
     std::thread receiveThread;
     XLstatus CANGoOnBus();
     XLstatus GoOffBus() override;
@@ -48,19 +48,18 @@ public:
     XLstatus CANResetFilter();
     XLstatus CANSetFilter(unsigned long first_id, unsigned long last_id);
     const char* GetChannelName(int channel);
-    void updateRxPayloads(XLevent& xlEvent, std::string dir = "Rx");    
-    void printRxPayloads();
-    std::vector<std::pair<std::pair<std::vector<unsigned long>, std::string>, std::vector<unsigned char>>> getRxPayloads() {return rxPayloads;}
+    void updateRxPayloads(XLevent& xlEvent);    
+    // void printRxPayloads();
+    // std::vector<std::pair<std::pair<std::vector<unsigned long>, std::string>, std::vector<unsigned char>>> getRxPayloads() {return rxPayloads;}
 
 private:
 
-    std::shared_mutex       mtxCAN;
+    // std::shared_mutex       mtxCAN;
     XLstatus canGetChannelMask();
     XLstatus HardwareInit();
     XLstatus canCreateRxThread();
-    void canLogger(const XLevent& xlEvent, const std::string dir);
+    void canLogger(XLevent xlEvent);
     void RxThread();
-
     XLaccess         m_xlChannelMask;
     int              m_xlChannelIndex;
     XLportHandle     m_xlPortHandle;
@@ -72,7 +71,7 @@ private:
     char            m_AppName[XL_MAX_APPNAME + 1] = "TsAPI";
     bool            g_rxThreadRun;
     // id, length, Tx/Rx, payloads
-    std::vector<std::pair<std::pair<std::vector<unsigned long>, std::string>, std::vector<unsigned char>>> rxPayloads;
+    // std::vector<std::pair<std::pair<std::vector<unsigned long>, std::string>, std::vector<unsigned char>>> rxPayloads;
 
 };
 

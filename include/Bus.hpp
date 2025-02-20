@@ -4,9 +4,9 @@
 |
 | Description : General father class for all bus
 |-----------------------------------------------------------------------------
-| Version     : 2.0
+| Version     : 3.0
 | Author      : Hao Zheng
-| Date        : 2024/12/22
+| Date        : 2025/2/20
 |---------------------------------------------------------------------------*/
 
 #ifndef BUS_HPP
@@ -16,6 +16,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <array>
 #include <iomanip>
 #include <stdio.h>
 #include <thread>
@@ -30,6 +31,7 @@
 
 // External variable declarations
 TS_API extern std::shared_ptr<TaskExecutor> LogTask;
+TS_API extern std::array<int, 16> dlcToLengthMap;
 
 // Global Hardware Configuration
 TS_API extern XLdriverConfig xlDrvConfig;
@@ -41,6 +43,7 @@ TS_API std::vector<int> getCANFDCapChannels();
 TS_API std::vector<int> getLINCapChannels();
 
 TS_API std::string timeNow();
+TS_API int dlcToLength(int dlc);
 
 class TS_API IBus {
 private:
@@ -61,13 +64,16 @@ public:
     void detachMonitor(ObserverM* observer);
 
     // Notify monitors with payload and id_length_dir information
-    void notifyMonitor(std::pair<std::vector<unsigned long>, std::string> id_length_dir, unsigned char* payload);
+    void notifyMonitor(XLcanRxEvent xlCanfdRxEvt);
+    void notifyMonitor(XLevent xlEvent);
+    void notifyDIOMonitor(unsigned int data);
+    void notifyAINMonitor(XL_IO_ANALOG_DATA data);
 
     // Pure virtual method for derived classes to implement
     virtual XLstatus GoOffBus() = 0;
 
     // Destructor
-    virtual ~IBus();    
+    virtual ~IBus() = 0;
 };
 
 #endif // BUS_HPP

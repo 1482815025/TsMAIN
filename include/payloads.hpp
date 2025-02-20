@@ -21,16 +21,8 @@ public:
 	unsigned int frameId;
 	unsigned int dlc;
 	std::vector<unsigned char> getPayload() const { return payload; }
-	void setPayload(unsigned char values[], size_t size = 8) {
-		std::vector<unsigned char> temp(values, values + size);
-		this->payload = temp;
-	}
-	void printPayload() {
-		for (unsigned int i = 0; i < dlc; i++) {
-			std::cout << std::hex << int(payload[i]) << " ";
-		}
-		std::cout << std::dec <<std::endl;
-	}
+	void setPayload(unsigned char values[], size_t size = 8);
+	void printPayload();
 	
 private:
 
@@ -38,32 +30,24 @@ private:
 
 };
 
-class Payloads_LIN {
+class PARSER_API Payloads_LIN {
 
 public:
 
+    Payloads_LIN() : sender(""), payloads() {
+        payloads.reserve(1000);
+    }
 	std::string sender;
-	std::vector<Payload_LIN> getPayloads() const { return payloads; }
-	void addPayload(Payload_LIN& _payload) { this->payloads.push_back(_payload); }
-	void updatePayload(unsigned int frameId, unsigned char newValues[], size_t size = 8) {
-		bool found = false;
-		for (auto& payload : payloads) {
-			if (payload.frameId == frameId) {
-				payload.setPayload(newValues, size);
-				found = true;
-			}
-		}
-		if (!found) {
-			std::cerr << "Frame with id "<< frameId <<" not found in the payloads" << std::endl;
-		}
-	}
+	std::vector<Payload_LIN> getPayloads() const {
+		return payloads;
+	};
+	void addPayload(Payload_LIN& _payload);
+	void updatePayload(unsigned int frameId, unsigned char newValues[], size_t size = 8);
 
 private:
 
 	std::vector<Payload_LIN> payloads;
 
 };
-
-
 
 #endif /* payloads_hpp */

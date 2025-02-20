@@ -4,9 +4,9 @@
 |
 | Description : DA/IO interface and automation related testing platform for vector hardware
 |-----------------------------------------------------------------------------
-| Version     : 2.0
+| Version     : 3.0
 | Author      : Hao Zheng, Mingbo Li
-| Date        : 2024/12/29
+| Date        : 2025/2/20
 |---------------------------------------------------------------------------*/
 
 #ifndef TsDAIO_HPP
@@ -26,25 +26,24 @@ typedef struct {
 class TS_API DAIO : public IBus {
 
 public:
-    //unit of cycleTime:ms
-	DAIO(int channel, int appCh = 0,unsigned int cycleTime = 1000);
-	~DAIO();
+
+	DAIO(XLdaioSetPort portCfg, int channel, int appCh = 0, unsigned int cycleTime = 100);
+	~DAIO() override;
 
 	XLstatus    daioInit();
     XLstatus    GoOnBus();
     XLstatus    GoOffBus() override;
-    void SetPortCfg(XLdaioSetPort pcg) {this->m_portCfg = pcg;}
     void        SetDigitalOut(unsigned int portMask = XL_DAIO_PORT_MASK_DIGITAL_D0, unsigned int valueMask = 0);
     void        SetAnalogOut(unsigned int portMask = XL_DAIO_PORT_MASK_ANALOG_A0, unsigned int valueMask = 0);
     void        updateAnalog(XL_IO_ANALOG_DATA data);
-    void        printAnalog();
+    // void        printAnalog();
     void        updateDigital(XL_IO_DIGITAL_DATA data);
-    void        printDigital();
+    // void        printDigital();
     int         g_ioPiggyDigitalTriggerCyclic;                  // Cyclic or on-edge digital trigger
 
 private:
 
-    std::shared_mutex       mtxDAIO;
+    // std::shared_mutex       mtxDAIO;
     void        daioRxThread();
     XLstatus    daioCreateRxThread();
 	XLstatus    daioSetupCab();       //-CANcardXL(and the IOcab8444opto)
@@ -60,7 +59,7 @@ private:
     std::thread      receiveThread;
     XLhandle         m_hMsgEvent;
     int              m_bInitDone;
-    char             m_AppName[XL_MAX_LENGTH + 1] = "TsMAIN";  // Application name which is displayed in VHWconf
+    char             m_AppName[XL_MAX_LENGTH + 1] = "TsAPI";  // Application name which is displayed in VHWconf
     unsigned int    appChannel;
 
     // Measuring Variables

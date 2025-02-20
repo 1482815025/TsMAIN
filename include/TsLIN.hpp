@@ -40,7 +40,7 @@ class TS_API LIN : public IBus
 {
 public:
     LIN(int channel, int appCh = 0, int baudrate = DEFAULT_LIN_BAUDRATE, unsigned int LinVersion = XL_LIN_VERSION_2_0, bool isMaster = true, bool flag = false);
-    ~LIN();
+    ~LIN() override;
     std::thread      receiveThreadLin;
     XLstatus            HardwareInit();
     XLstatus            LINInit();
@@ -49,21 +49,18 @@ public:
     XLstatus                linSetSlave(unsigned int linID, unsigned char data[8], unsigned int dlc);
     XLstatus                linCreateRxThread();
     XLstatus                LINSendMasterReq(unsigned int linID);
-    XLstatus                updateRxPayloads(XLevent& pEvent);
-    void                    printRxPayloads();
-    std::vector<rxPayload>  getRxPayloads() { return linRxPayloads; }
+    void                updateRxPayloads(XLevent& pEvent);
+    // void                    printRxPayloads();
+    // std::vector<rxPayload>  getRxPayloads() { return linRxPayloads; }
 
 private:
 
-    std::shared_mutex   mtxLIN;
-    
+    // std::shared_mutex   mtxLIN;
     XLstatus            linGetChannelMask();
-    
     XLstatus            linInitMaster();
     XLstatus            linInitSlave();
     void                RxThread_LIN();
-    void                linLogger(const XLevent& xlEvent, const std::string dir);
-
+    void                linLogger(XLevent xlEvent);
     XLaccess            m_xlChannelMask;
     int                 m_xlChannelIndex;
     XLportHandle        m_xlPortHandle;
@@ -77,7 +74,7 @@ private:
     BOOL                g_bThreadRun_LIN;
     bool masterFlag;
     // id, dlc, Tx/Rx, payload
-    std::vector<rxPayload> linRxPayloads;
+    // std::vector<rxPayload> linRxPayloads;
 };
 
 // TS_API void RxThread_LIN(LIN& lin, TStruct_LIN& pTh);

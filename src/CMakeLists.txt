@@ -15,7 +15,7 @@ link_directories(../lib/dynamic)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-add_executable(test main.cpp)
+add_executable(test main.cpp Getway.cpp)
 # target_link_libraries(test PRIVATE SendFunc db_parser TsAPI vxlapi64 fltk fltk_gl comctl32 wsock32 gdiplus)
 target_link_libraries(test PRIVATE SendFunc db_parser TsAPI vxlapi64)
 # target_link_libraries(test db_parser)
