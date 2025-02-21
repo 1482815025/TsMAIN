@@ -1,5 +1,12 @@
 #include "Getway.hpp"
 
+void IGThread(std::shared_ptr<CANFD> canfd, XLcanTxEvent* canfdMsg, unsigned int cnt, unsigned int cycletime) {
+    do {
+        canfd->CANFDSend(canfdMsg, cnt);
+        Sleep(cycletime);
+    } while (!stopFlag);
+    std::cout<< "Exiting IG thread. " << std::endl;
+}
 
 void Getway::updateDIOPayload(unsigned int data) {
     printf("\n------------------------------------------------------------------------------\n");

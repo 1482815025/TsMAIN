@@ -3,6 +3,9 @@
 
 #include "SendFunctions.hpp"
 
+
+void IGThread(std::shared_ptr<CANFD> canfd, XLcanTxEvent* canfdMsg, unsigned int cnt, unsigned int cycletime);
+
 class Getway : public Monitor{
 public:
     Getway() : Monitor() {}

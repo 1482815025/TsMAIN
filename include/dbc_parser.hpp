@@ -49,6 +49,11 @@ public:
     
     void addPayload(Payload_CAN payload);
     void updatePayload(unsigned long id, unsigned char newValues[], size_t newSize);
+    void setId(int index, unsigned long id);
+    void setCycleTime(int index, unsigned long cycleTime);
+    void setDlc(int index, unsigned short int dlc);
+    void setSendType(int index, unsigned short int sendType);
+    void setPayload(int index, unsigned char newValues[], size_t newSize);
     std::vector<Payload_CAN> getPayloads() const {
         std::shared_lock<std::shared_mutex> lock(mtxPayloads_CAN);
         return payloads;

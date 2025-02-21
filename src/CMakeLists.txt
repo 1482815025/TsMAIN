@@ -11,7 +11,8 @@ aux_source_directory (. SRC_LIST)
 
 include_directories (../include )
 # link_directories(../lib/static)
-link_directories(../lib/dynamic)
+# link_directories(../lib/dynamic)
+link_directories(../lib)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 

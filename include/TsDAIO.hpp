@@ -24,9 +24,7 @@ typedef struct {
 } TStruct_DAIO;
 
 class TS_API DAIO : public IBus {
-
 public:
-
 	DAIO(XLdaioSetPort portCfg, int channel, int appCh = 0, unsigned int cycleTime = 100);
 	~DAIO() override;
 
@@ -36,14 +34,10 @@ public:
     void        SetDigitalOut(unsigned int portMask = XL_DAIO_PORT_MASK_DIGITAL_D0, unsigned int valueMask = 0);
     void        SetAnalogOut(unsigned int portMask = XL_DAIO_PORT_MASK_ANALOG_A0, unsigned int valueMask = 0);
     void        updateAnalog(XL_IO_ANALOG_DATA data);
-    // void        printAnalog();
     void        updateDigital(XL_IO_DIGITAL_DATA data);
-    // void        printDigital();
     int         g_ioPiggyDigitalTriggerCyclic;                  // Cyclic or on-edge digital trigger
 
 private:
-
-    // std::shared_mutex       mtxDAIO;
     void        daioRxThread();
     XLstatus    daioCreateRxThread();
 	XLstatus    daioSetupCab();       //-CANcardXL(and the IOcab8444opto)
@@ -68,7 +62,5 @@ private:
     unsigned int        m_analogData[4];
     unsigned int        m_digitalData;
 };
-
-// void daioRxThread(DAIO& daio, TStruct_DAIO& pTh);
 
 #endif // TsDAIO_HPP
